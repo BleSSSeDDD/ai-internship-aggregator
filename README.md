@@ -13,7 +13,7 @@ This is not your typical regex-based scraper. This is a high-performance **distr
 
 | Layer | Technology | Purpose |
 | :--- | :--- | :--- |
-| **Scraper** | `Go 1.22+` | High-concurrency crawling & data extraction |
+| **Scraper** | `Go 1.25+` | High-concurrency crawling & data extraction |
 | **Brain** | `Ollama (Llama 3)` | Local LLM for semantic parsing of job descriptions |
 | **Contract** | `Protobuf` | Strict, language-agnostic data schemas |
 | **Transport** | `Apache Kafka` | Event-driven streaming between services |
