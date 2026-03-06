@@ -1,0 +1,21 @@
+{
+    email your-email@example.com
+}
+
+intern-aggregator.local {
+    # Прокси на Java Backend (Дашборд)
+    handle /api/* {
+        reverse_proxy backend:8080
+    }
+
+    # Прокси на Kafka UI (только для тебя, можно закрыть паролем)
+    handle /admin/* {
+        reverse_proxy kafka-ui:8080
+    }
+
+    # Всё остальное
+    handle {
+        root * /usr/share/caddy
+        file_server
+    }
+}
