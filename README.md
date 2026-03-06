@@ -33,3 +33,12 @@ The Go service is built with **Separation of Concerns** in mind:
 We use a **Monorepo** approach. Everything you need is in the `deployments` folder.
 ```bash
 task infra
+
+
+TODO:
+
+back:
+    читаешь протобаф из кафки
+    записываешь/обновляешь в бд
+    выплевываешь во фронтед чтоб красиво было как
+    Даун Артемий
