@@ -3,7 +3,7 @@ package usecase
 import (
 	"context"
 
-	"github.com/BleSSSeDDD/ai-internship-aggregator/scrapper/internal/domain"
+	"github.com/BleSSSeDDD/reviewer-assignment/internal/domain"
 )
 
 type ScraperUsecase struct {
