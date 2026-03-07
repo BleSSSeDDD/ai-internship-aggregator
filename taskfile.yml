@@ -1,0 +1,98 @@
+# deployments/Taskfile.yml
+version: '3'
+
+tasks:
+  default:
+    desc: Show available commands
+    cmds:
+      - task --list
+
+  up:
+    desc: Start all services
+    cmds:
+      - echo "Starting services..."
+      - docker compose up -d
+      - echo "Done. Kafka UI http://localhost:8080"
+      - task ps
+
+  down:
+    desc: Stop all services
+    cmds:
+      - echo "Stopping services..."
+      - docker compose down
+      - echo "All services stopped"
+
+  destroy:
+    desc: Stop and remove everything (including volumes)
+    cmds:
+      - echo "WARNING This will delete ALL data!"
+      - docker compose down -v
+      - echo "Everything removed"
+
+  restart:
+    desc: Restart all services
+    cmds:
+      - task down
+      - task up
+
+  logs:
+    desc: Show logs (Ctrl+C to exit)
+    cmds:
+      - docker compose logs -f
+
+  ps:
+    desc: Show container status
+    cmds:
+      - docker compose ps
+
+  kafka-shell:
+    desc: Open shell in Kafka container
+    cmds:
+      - docker exec -it kafka bash
+
+  kafka-topics:
+    desc: List Kafka topics
+    cmds:
+      - docker exec kafka kafka-topics --list --bootstrap-server localhost:9092
+
+  kafka-create-topic:
+    desc: Create a topic (use TOPIC=name)
+    cmds:
+      - docker exec kafka kafka-topics --create --topic {{.TOPIC}} --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
+    vars:
+      TOPIC: '{{.TOPIC | default "internships"}}'
+
+  kafka-consume:
+    desc: Consume messages from topic (use TOPIC=name)
+    cmds:
+      - docker exec -it kafka kafka-console-consumer --bootstrap-server localhost:9092 --topic {{.TOPIC}} --from-beginning
+    vars:
+      TOPIC: '{{.TOPIC | default "internships"}}'
+
+  ollama-pull:
+    desc: Pull Ollama model (use MODEL=name)
+    cmds:
+      - docker exec ollama ollama pull {{.MODEL}}
+    vars:
+      MODEL: '{{.MODEL | default "llama3.2"}}'
+
+  ollama-list:
+    desc: List Ollama models
+    cmds:
+      - docker exec ollama ollama list
+
+  pg-shell:
+    desc: Open PostgreSQL shell
+    cmds:
+      - docker exec -it postgres psql -U app -d aggregator
+
+  status:
+    desc: Show status of all services
+    cmds:
+      - task: ps
+      - echo ""
+      - echo "Kafka topics:"
+      - task: kafka-topics
+      - echo ""
+      - echo "Ollama models:"
+      - task: ollama-list

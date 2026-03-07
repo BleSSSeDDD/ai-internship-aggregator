@@ -1,0 +1,144 @@
+name: internship-aggregator
+
+services:
+  # ---- Kafka 4.2.0
+  kafka:
+    image: apache/kafka:4.2.0 
+    container_name: internship-kafka
+    ports:
+      - "9092:9092"
+    environment:
+      # KRaft mode (без Zookeeper)
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: controller,broker
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      
+      # Listeners - ВАЖНО: добавляем controller.listener.names
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER  # ЭТО КЛЮЧЕВОЕ!
+      
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      
+      # Cluster ID (можно задать фиксированный)
+      KAFKA_CLUSTER_ID: "5L6g3nShT-eMCtK--X86sw"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD", "bash", "-c", 'printf "" > /dev/tcp/127.0.0.1/9092']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  # ---- Kafka UI (latest)
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: internship-kafka-ui
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: internship-kafka:9092
+      
+      # Добавь ЭТИ строки:
+      KAFKA_CLUSTERS_0_PROPERTIES_SECURITY_PROTOCOL: PLAINTEXT
+      KAFKA_CLUSTERS_0_CLIENT_ID: kafka-ui
+      KAFKA_CLUSTERS_0_PROPERTIES_REQUEST_TIMEOUT_MS: 30000
+      KAFKA_CLUSTERS_0_PROPERTIES_RETRY_BACKOFF_MS: 500
+      KAFKA_CLUSTERS_0_READONLY: "false"
+      
+      # Настройки JMX (если нужны)
+      KAFKA_CLUSTERS_0_METRICS_PORT: 9092
+      KAFKA_CLUSTERS_0_METRICS_TYPE: JMX
+      
+      # Таймауты и пулинги
+      KAFKA_CLUSTERS_0_POLL_TIMEOUT_MS: 5000
+    depends_on:
+      kafka:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  # ---- PostgreSQL 18.2
+  postgres:
+    image: postgres:18.2-alpine
+    container_name: internship-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: aggregator
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: secret
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=C"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d aggregator"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+  # ---- Ollama (latest)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: internship-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+      - OLLAMA_NUM_PARALLEL=2
+      - OLLAMA_MAX_LOADED_MODELS=1
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - app-network
+
+  # ---- Caddy 
+  caddy:
+    image: caddy:2.9-alpine  # можно оставить, стабильно
+    container_name: internship-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8081:8080"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - kafka-ui
+    networks:
+      - app-network
+
+volumes:
+  kafka_data:
+    driver: local
+  ollama_data:
+    driver: local
+  postgres_data:
+    driver: local
+  caddy_data:
+    driver: local
+  caddy_config:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge
+    name: internship-network

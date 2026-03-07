@@ -1,0 +1,38 @@
+# deployments/caddy/Caddyfile
+
+localhost:8080 {
+    tls internal
+    
+    # Kafka UI
+    handle /kafka* {
+        rewrite * /{path}
+        reverse_proxy kafka-ui:8080
+    }
+    
+    # Backend API (когда будет)
+    handle /api* {
+        header {
+            Access-Control-Allow-Origin *
+            Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+            Access-Control-Allow-Headers "Content-Type, Authorization"
+        }
+        reverse_proxy backend:8081
+    }
+    
+    # Frontend
+    handle {
+        root * /usr/share/caddy
+        file_server
+    }
+    
+    # Логи
+    log {
+        output file /var/log/caddy/access.log
+        level INFO
+    }
+}
+
+# Health check
+:80 {
+    respond /health 200
+}

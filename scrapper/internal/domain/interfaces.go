@@ -1,6 +1,10 @@
 package domain
 
-import "context"
+import (
+	"context"
+
+	vacancy "github.com/BleSSSeDDD/reviewer-assignment/generated"
+)
 
 // Parser - умеет зайти на сайт и достать сырой текст/HTML
 type Parser interface {
@@ -9,10 +13,10 @@ type Parser interface {
 
 // AIProcessor - умеет превратить мусорный текст в структуру Internship
 type AIProcessor interface {
-	Process(ctx context.Context, text string) (*Internship, error)
+	Process(ctx context.Context, text string) (*vacancy.CompanyInternship, error)
 }
 
 // Publisher - умеет отправить готовую структуру в Кафку
 type Publisher interface {
-	Publish(ctx context.Context, internship *Internship) error
+	Publish(ctx context.Context, internship *vacancy.CompanyInternship) error
 }

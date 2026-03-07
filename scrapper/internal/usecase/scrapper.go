@@ -17,18 +17,15 @@ func NewScraperUsecase(p domain.Parser, ai domain.AIProcessor, pub domain.Publis
 }
 
 func (u *ScraperUsecase) Run(ctx context.Context, url string) error {
-	// 1. Парсим
 	text, err := u.parser.GetRawContent(ctx, url)
 	if err != nil {
 		return err
 	}
 
-	// 2. ИИ-процессинг
 	data, err := u.ai.Process(ctx, text)
 	if err != nil {
 		return err
 	}
 
-	// 3. Публикация
 	return u.publisher.Publish(ctx, data)
 }
