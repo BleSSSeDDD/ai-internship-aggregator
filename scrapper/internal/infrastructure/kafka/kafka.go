@@ -22,7 +22,7 @@ func NewPublisher(brokers []string, topic string) domain.Publisher {
 		Addr:         kafka.TCP(brokers...),
 		Topic:        topic,
 		Balancer:     &kafka.LeastBytes{},
-		BatchTimeout: 10 * time.Millisecond,
+		BatchSize:    1,
 		RequiredAcks: kafka.RequireOne,
 	}
 

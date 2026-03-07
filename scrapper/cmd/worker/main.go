@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"time"
 
 	"github.com/BleSSSeDDD/reviewer-assignment/internal/infrastructure/aiprocessor"
 	"github.com/BleSSSeDDD/reviewer-assignment/internal/infrastructure/httpclient"
@@ -14,9 +14,10 @@ func main() {
 	p := httpclient.NewParser()
 	a := aiprocessor.NewStub()
 	k := kafka.NewPublisher(
-		[]string{"localhost:9092"}, // адрес Kafka из docker-compose
+		[]string{"localhost:9094"}, // адрес Kafka из docker-compose
 		"internships",              // имя топика
 	)
+	defer k.Close()
 
 	scrapper := usecase.NewScraperUsecase(p, a, k)
 
@@ -25,5 +26,5 @@ func main() {
 
 	scrapper.Run(ctx, "artemiy daun")
 
-	fmt.Scan()
+	time.Sleep(time.Second)
 }

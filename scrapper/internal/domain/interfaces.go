@@ -19,4 +19,5 @@ type AIProcessor interface {
 // Publisher - умеет отправить готовую структуру в Кафку
 type Publisher interface {
 	Publish(ctx context.Context, internship *vacancy.CompanyInternship) error
+	Close() error
 }

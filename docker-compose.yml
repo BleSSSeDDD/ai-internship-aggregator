@@ -1,32 +1,33 @@
 name: internship-aggregator
 
 services:
-  # ---- Kafka 4.2.0
+  # ---- Kafka 4.2.0 (KRaft mode)
   kafka:
-    image: apache/kafka:4.2.0 
+    image: apache/kafka:4.2.0
     container_name: internship-kafka
     ports:
-      - "9092:9092"
+      - "9094:9094" # Порт для подключения с вашего ПК (localhost:9094)
     environment:
-      # KRaft mode (без Zookeeper)
+      # Настройки узла
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: controller,broker
-      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@internship-kafka:9093
       
-      # Listeners - ВАЖНО: добавляем controller.listener.names
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
-      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER  # ЭТО КЛЮЧЕВОЕ!
+      # Слушатели: 
+      # 9092 - внутри Docker сети (для Kafka UI)
+      # 9094 - снаружи для хоста (через localhost)
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093,EXTERNAL://0.0.0.0:9094
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://internship-kafka:9092,EXTERNAL://localhost:9094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       
+      # Данные и репликация
       KAFKA_LOG_DIRS: /var/lib/kafka/data
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-      
-      # Cluster ID (можно задать фиксированный)
       KAFKA_CLUSTER_ID: "5L6g3nShT-eMCtK--X86sw"
     volumes:
       - kafka_data:/var/lib/kafka/data
@@ -38,7 +39,8 @@ services:
     networks:
       - app-network
 
-  # ---- Kafka UI (latest)
+  # Замени полностью сервис kafka-ui на этот код
+
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: internship-kafka-ui
@@ -48,19 +50,10 @@ services:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: internship-kafka:9092
       
-      # Добавь ЭТИ строки:
+      # Старый добрый синтаксис, который работает
       KAFKA_CLUSTERS_0_PROPERTIES_SECURITY_PROTOCOL: PLAINTEXT
-      KAFKA_CLUSTERS_0_CLIENT_ID: kafka-ui
-      KAFKA_CLUSTERS_0_PROPERTIES_REQUEST_TIMEOUT_MS: 30000
-      KAFKA_CLUSTERS_0_PROPERTIES_RETRY_BACKOFF_MS: 500
-      KAFKA_CLUSTERS_0_READONLY: "false"
-      
-      # Настройки JMX (если нужны)
-      KAFKA_CLUSTERS_0_METRICS_PORT: 9092
-      KAFKA_CLUSTERS_0_METRICS_TYPE: JMX
-      
-      # Таймауты и пулинги
-      KAFKA_CLUSTERS_0_POLL_TIMEOUT_MS: 5000
+    volumes:
+      - ./proto:/etc/kafka-ui/proto:ro  # Просто монтируем proto, без сложных настроек
     depends_on:
       kafka:
         condition: service_healthy
@@ -88,7 +81,7 @@ services:
     networks:
       - app-network
 
-  # ---- Ollama (latest)
+  # ---- Ollama
   ollama:
     image: ollama/ollama:latest
     container_name: internship-ollama
@@ -110,7 +103,7 @@ services:
 
   # ---- Caddy 
   caddy:
-    image: caddy:2.9-alpine  # можно оставить, стабильно
+    image: caddy:2.9-alpine
     container_name: internship-caddy
     restart: unless-stopped
     ports:
@@ -128,17 +121,11 @@ services:
 
 volumes:
   kafka_data:
-    driver: local
   ollama_data:
-    driver: local
   postgres_data:
-    driver: local
   caddy_data:
-    driver: local
   caddy_config:
-    driver: local
 
 networks:
   app-network:
-    driver: bridge
     name: internship-network
