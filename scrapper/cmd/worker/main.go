@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/BleSSSeDDD/reviewer-assignment/internal/infrastructure/aiprocessor"
@@ -14,8 +15,8 @@ func main() {
 	p := httpclient.NewParser()
 	a := aiprocessor.NewStub()
 	k := kafka.NewPublisher(
-		[]string{"localhost:9094"}, // адрес Kafka из docker-compose
-		"internships",              // имя топика
+		[]string{"internship-kafka:9092"}, // адрес Kafka из docker-compose
+		"internships",                     // имя топика
 	)
 	defer k.Close()
 
@@ -24,7 +25,22 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	scrapper.Run(ctx, "artemiy daun")
-
-	time.Sleep(time.Second)
+	for i := 0; ; i++ {
+		if i%2 == 0 {
+			err := scrapper.Run(ctx, "artemiy daun")
+			if err != nil {
+				log.Printf("❌ Ошибка: %v", err)
+			} else {
+				log.Println("✅ Успешно отправлено в Kafka")
+			}
+		} else {
+			err := scrapper.Run(ctx, "ivan sigma")
+			if err != nil {
+				log.Printf("❌ Ошибка: %v", err)
+			} else {
+				log.Println("✅ Успешно отправлено в Kafka")
+			}
+		}
+		time.Sleep(5 * time.Second)
+	}
 }

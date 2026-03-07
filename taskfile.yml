@@ -11,6 +11,7 @@ tasks:
     desc: Start all services
     cmds:
       - echo "Starting services..."
+      - docker compose build --no-cache parser
       - docker compose up -d
       - echo "Done. Kafka UI http://localhost:8080"
       - task ps

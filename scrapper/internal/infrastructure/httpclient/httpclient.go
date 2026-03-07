@@ -27,5 +27,8 @@ func NewParser() domain.Parser {
 // }
 
 func (p *vacancyParser) GetRawContent(ctx context.Context, url string) (string, error) {
+	if url == "ivan sigma" {
+		return string("qwe"), nil
+	}
 	return string("da eto tak)"), nil
 }

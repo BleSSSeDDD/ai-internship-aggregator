@@ -119,6 +119,16 @@ services:
     networks:
       - app-network
 
+  parser:
+    build: ./scrapper
+    container_name: ai-aggregator-parser
+    depends_on:
+      kafka:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - app-network
+
 volumes:
   kafka_data:
   ollama_data:
