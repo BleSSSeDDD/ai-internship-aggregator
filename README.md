@@ -40,7 +40,7 @@ The Go service is built with **Separation of Concerns** in mind:
 ## 🚀 Quick Start
 
 ### 1. Spin up the infrastructure
-We use a **Monorepo** approach. Everything you need is in the `deployments` folder.
+We use a **Monorepo** approach. Everything you need is in the root folder.
 ```bash
 task infra
 
