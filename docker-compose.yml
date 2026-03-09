@@ -91,6 +91,7 @@ services:
       - OLLAMA_HOST=0.0.0.0
       - OLLAMA_NUM_PARALLEL=2
       - OLLAMA_MAX_LOADED_MODELS=1
+      - OLLAMA_CONTEXT_LENGTH=16384
     healthcheck:
       test: ["CMD", "sh", "-c", "ollama list | grep -q qwen2.5:3b"]
       interval: 30s

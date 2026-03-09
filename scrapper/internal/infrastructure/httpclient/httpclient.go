@@ -12,6 +12,8 @@ import (
 )
 
 const MAX_RETRIES = 3
+const CLIENT_TIMEOUT = 10 * time.Second
+const REQUEST_DELAY = 1 * time.Second
 
 type vacancyParser struct {
 	client *http.Client
@@ -19,8 +21,8 @@ type vacancyParser struct {
 }
 
 func NewParser() domain.Parser {
-	client := &http.Client{Timeout: 10 * time.Second}
-	ticker := time.NewTicker(1 * time.Second)
+	client := &http.Client{Timeout: CLIENT_TIMEOUT}
+	ticker := time.NewTicker(REQUEST_DELAY)
 
 	return &vacancyParser{
 		client: client,
@@ -29,6 +31,7 @@ func NewParser() domain.Parser {
 }
 
 func (p *vacancyParser) GetRawContent(ctx context.Context, url string) (string, error) {
+	log.Println("Качаю страничку ", url)
 	var lastErr error
 
 	for attempt := 0; attempt < MAX_RETRIES; attempt++ {

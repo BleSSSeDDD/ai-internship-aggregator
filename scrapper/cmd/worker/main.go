@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"log"
-	"time"
 
 	"github.com/BleSSSeDDD/ai-internship-aggregator/internal/infrastructure/aiprocessor"
 	"github.com/BleSSSeDDD/ai-internship-aggregator/internal/infrastructure/httpclient"
@@ -13,7 +12,7 @@ import (
 
 func main() {
 	p := httpclient.NewParser()
-	a := aiprocessor.NewStub()
+	a := aiprocessor.NewAiProcessor("http://internship-ollama:11434", "qwen2.5:3b")
 	k := kafka.NewPublisher(
 		[]string{"internship-kafka:9092"}, // адрес Kafka из docker-compose
 		"internships",                     // имя топика
@@ -25,22 +24,12 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	for i := 0; ; i++ {
-		if i%2 == 0 {
-			err := scrapper.Run(ctx, "крутая ссылка")
-			if err != nil {
-				log.Printf("Ошибка: %v", err)
-			} else {
-				log.Println("Успешно отправлено в Kafka")
-			}
-		} else {
-			err := scrapper.Run(ctx, "ivan sigma")
-			if err != nil {
-				log.Printf("Ошибка: %v", err)
-			} else {
-				log.Println("Успешно отправлено в Kafka")
-			}
-		}
-		time.Sleep(20 * time.Second)
+	log.Printf("Я ЖИВОЙ Я ЖИВОЙ ЩА ПОДОЖДИ ЧУТКА")
+
+	err := scrapper.Run(ctx, "https://yandex.ru/yaintern/backend")
+	if err != nil {
+		log.Printf("Ошибка: %v", err)
+	} else {
+		log.Println("Успешно отправлено в Kafka")
 	}
 }
