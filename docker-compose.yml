@@ -93,11 +93,19 @@ services:
       - OLLAMA_HOST=0.0.0.0
       - OLLAMA_NUM_PARALLEL=2
       - OLLAMA_MAX_LOADED_MODELS=1
+    entrypoint: >
+      sh -c "
+        ollama serve &
+        sleep 5 &&
+        ollama pull qwen2.5:3b &&
+        tail -f /dev/null
+      "
     healthcheck:
-      test: ["CMD", "ollama", "list"]
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/generate", "-d", '{"model": "qwen2.5:3b", "prompt": "test", "stream": false}']
       interval: 30s
-      timeout: 10s
-      retries: 3
+      timeout: 15s
+      retries: 10
+      start_period: 60s
     networks:
       - app-network
 

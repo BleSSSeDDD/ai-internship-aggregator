@@ -41,6 +41,6 @@ func main() {
 				log.Println("✅ Успешно отправлено в Kafka")
 			}
 		}
-		time.Sleep(5 * time.Second)
+		time.Sleep(20 * time.Second)
 	}
 }
