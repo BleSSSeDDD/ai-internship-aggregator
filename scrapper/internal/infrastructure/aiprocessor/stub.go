@@ -13,6 +13,7 @@ func NewStub() domain.AIProcessor {
 	return &StubProcessor{}
 }
 
+// нуу пока так чтоб грустно не было легендарному джависту
 func (s *StubProcessor) Process(ctx context.Context, text string) (*vacancy.CompanyInternship, error) {
 	if text == "qwe" {
 		return &vacancy.CompanyInternship{

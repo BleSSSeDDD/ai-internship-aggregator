@@ -27,18 +27,18 @@ func main() {
 
 	for i := 0; ; i++ {
 		if i%2 == 0 {
-			err := scrapper.Run(ctx, "artemiy daun")
+			err := scrapper.Run(ctx, "крутая ссылка")
 			if err != nil {
-				log.Printf("❌ Ошибка: %v", err)
+				log.Printf("Ошибка: %v", err)
 			} else {
-				log.Println("✅ Успешно отправлено в Kafka")
+				log.Println("Успешно отправлено в Kafka")
 			}
 		} else {
 			err := scrapper.Run(ctx, "ivan sigma")
 			if err != nil {
-				log.Printf("❌ Ошибка: %v", err)
+				log.Printf("Ошибка: %v", err)
 			} else {
-				log.Println("✅ Успешно отправлено в Kafka")
+				log.Println("Успешно отправлено в Kafka")
 			}
 		}
 		time.Sleep(20 * time.Second)

@@ -39,8 +39,6 @@ services:
     networks:
       - app-network
 
-  # Замени полностью сервис kafka-ui на этот код
-
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: internship-kafka-ui
@@ -50,10 +48,10 @@ services:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: internship-kafka:9092
       
-      # Старый добрый синтаксис, который работает
+      # короче подсос прото пока не работает потом починим это фигня
       KAFKA_CLUSTERS_0_PROPERTIES_SECURITY_PROTOCOL: PLAINTEXT
     volumes:
-      - ./proto:/etc/kafka-ui/proto:ro  # Просто монтируем proto, без сложных настроек
+      - ./proto:/etc/kafka-ui/proto:ro  
     depends_on:
       kafka:
         condition: service_healthy

@@ -16,7 +16,6 @@ type publisher struct {
 	writer *kafka.Writer
 }
 
-// NewPublisher создает настоящего publisher'а
 func NewPublisher(brokers []string, topic string) domain.Publisher {
 	w := &kafka.Writer{
 		Addr:         kafka.TCP(brokers...),
@@ -30,13 +29,11 @@ func NewPublisher(brokers []string, topic string) domain.Publisher {
 }
 
 func (p *publisher) Publish(ctx context.Context, internship *vacancy.CompanyInternship) error {
-	// 1. Сериализуем Protobuf
 	data, err := proto.Marshal(internship)
 	if err != nil {
 		return fmt.Errorf("failed to marshal: %w", err)
 	}
 
-	// 2. Отправляем в Kafka
 	msg := kafka.Message{
 		Key:   []byte(internship.CompanyName),
 		Value: data,
