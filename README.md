@@ -1,15 +1,13 @@
 # ⚡️ AI-INTERNSHIP-AGGREGATOR
 
 
+```text
 ╔════════════════════════════════╗
-
 ║   НАМ НУЖЕН УМ                 ║
-
 ║        И УМ НАМ НУЖЕН          ║
-
 ║              КОНЕЦ.            ║
-
 ╚════════════════════════════════╝
+```
 
 
 > **"Turning messy HTML into gold. AI-powered internship engine fueled by Go, Kafka, and pure enthusiasm. Overengineered? Maybe. Overpowered? Definitely. The cleanest AI-scraper in the game."**
