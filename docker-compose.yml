@@ -93,19 +93,18 @@ services:
       - OLLAMA_HOST=0.0.0.0
       - OLLAMA_NUM_PARALLEL=2
       - OLLAMA_MAX_LOADED_MODELS=1
-    entrypoint: >
-      sh -c "
-        ollama serve &
-        sleep 5 &&
-        ollama pull qwen2.5:3b &&
-        tail -f /dev/null
-      "
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:11434/api/generate", "-d", '{"model": "qwen2.5:3b", "prompt": "test", "stream": false}']
+      test: ["CMD", "sh", "-c", "ollama list | grep -q qwen2.5:3b"]
       interval: 30s
-      timeout: 15s
+      timeout: 10s
       retries: 10
       start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 3G 
+        reservations:
+          memory: 2G
     networks:
       - app-network
 
@@ -132,6 +131,8 @@ services:
     container_name: ai-aggregator-parser
     depends_on:
       kafka:
+        condition: service_healthy
+      ollama:
         condition: service_healthy
     restart: unless-stopped
     networks:
