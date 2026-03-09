@@ -1,4 +1,4 @@
-module github.com/BleSSSeDDD/reviewer-assignment
+module github.com/BleSSSeDDD/ai-internship-aggregator
 
 go 1.25.3
 

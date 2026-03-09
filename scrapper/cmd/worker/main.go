@@ -5,10 +5,10 @@ import (
 	"log"
 	"time"
 
-	"github.com/BleSSSeDDD/reviewer-assignment/internal/infrastructure/aiprocessor"
-	"github.com/BleSSSeDDD/reviewer-assignment/internal/infrastructure/httpclient"
-	"github.com/BleSSSeDDD/reviewer-assignment/internal/infrastructure/kafka"
-	"github.com/BleSSSeDDD/reviewer-assignment/internal/usecase"
+	"github.com/BleSSSeDDD/ai-internship-aggregator/internal/infrastructure/aiprocessor"
+	"github.com/BleSSSeDDD/ai-internship-aggregator/internal/infrastructure/httpclient"
+	"github.com/BleSSSeDDD/ai-internship-aggregator/internal/infrastructure/kafka"
+	"github.com/BleSSSeDDD/ai-internship-aggregator/internal/usecase"
 )
 
 func main() {

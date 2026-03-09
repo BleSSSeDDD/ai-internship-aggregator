@@ -5,11 +5,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/BleSSSeDDD/ai-internship-aggregator/gen/go/vacancy"
+	"github.com/BleSSSeDDD/ai-internship-aggregator/internal/domain"
 	"github.com/segmentio/kafka-go"
 	"google.golang.org/protobuf/proto"
-
-	vacancy "github.com/BleSSSeDDD/reviewer-assignment/generated"
-	"github.com/BleSSSeDDD/reviewer-assignment/internal/domain"
 )
 
 type publisher struct {
