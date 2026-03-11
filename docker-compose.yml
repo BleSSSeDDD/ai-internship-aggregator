@@ -39,8 +39,6 @@ services:
     networks:
       - app-network
 
-  # Замени полностью сервис kafka-ui на этот код
-
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: internship-kafka-ui
@@ -50,10 +48,10 @@ services:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: internship-kafka:9092
       
-      # Старый добрый синтаксис, который работает
+      # короче подсос прото пока не работает потом починим это фигня
       KAFKA_CLUSTERS_0_PROPERTIES_SECURITY_PROTOCOL: PLAINTEXT
     volumes:
-      - ./proto:/etc/kafka-ui/proto:ro  # Просто монтируем proto, без сложных настроек
+      - ./proto:/etc/kafka-ui/proto:ro  
     depends_on:
       kafka:
         condition: service_healthy
@@ -95,10 +93,17 @@ services:
       - OLLAMA_NUM_PARALLEL=2
       - OLLAMA_MAX_LOADED_MODELS=1
     healthcheck:
-      test: ["CMD", "ollama", "list"]
+      test: ["CMD", "sh", "-c", "ollama list | grep -q qwen2.5:3b"]
       interval: 30s
       timeout: 10s
-      retries: 3
+      retries: 10
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 3G 
+        reservations:
+          memory: 2G
     networks:
       - app-network
 
@@ -117,6 +122,18 @@ services:
       - caddy_config:/config
     depends_on:
       - kafka-ui
+    networks:
+      - app-network
+
+  parser:
+    build: ./scrapper
+    container_name: ai-aggregator-parser
+    depends_on:
+      kafka:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+    restart: unless-stopped
     networks:
       - app-network
 

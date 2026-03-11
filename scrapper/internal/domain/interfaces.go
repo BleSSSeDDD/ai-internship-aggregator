@@ -3,7 +3,7 @@ package domain
 import (
 	"context"
 
-	vacancy "github.com/BleSSSeDDD/reviewer-assignment/generated"
+	"github.com/BleSSSeDDD/ai-internship-aggregator/gen/go/vacancy"
 )
 
 // Parser - умеет зайти на сайт и достать сырой текст/HTML
