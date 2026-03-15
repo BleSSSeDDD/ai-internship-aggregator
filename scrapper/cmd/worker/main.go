@@ -15,9 +15,9 @@ func main() {
 	p := httpclient.NewParser()
 	a := aiprocessor.NewStub()
 	k := kafka.NewPublisher(
-		[]string{"internship-kafka:9092"}, // адрес Kafka из docker-compose
-		"internships",                     // имя топика
-	)
+        []string{"localhost:9094"},
+        "internships",
+    )
 	defer k.Close()
 
 	scrapper := usecase.NewScraperUsecase(p, a, k)
