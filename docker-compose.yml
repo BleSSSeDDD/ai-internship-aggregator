@@ -63,7 +63,7 @@ services:
     image: postgres:18.2-alpine
     container_name: internship-postgres
     ports:
-      - "5432:5432"
+      - "5433:5432"
     environment:
       POSTGRES_DB: aggregator
       POSTGRES_USER: app
@@ -72,14 +72,15 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U app -d aggregator"]
+      test: [ "CMD-SHELL", "pg_isready -U app -d aggregator" ]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
       - app-network
 
-  # ---- Ollama
+
+    # ---- Ollama
   ollama:
     image: ollama/ollama:latest
     container_name: internship-ollama
