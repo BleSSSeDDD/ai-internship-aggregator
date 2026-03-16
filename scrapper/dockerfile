@@ -16,6 +16,7 @@ RUN addgroup -S parser && adduser -S parser -G parser
 WORKDIR /parser
 
 COPY --from=build /build/ai-parser ./ai-parser
+COPY --from=build /build/config /config
 
 USER parser
 

@@ -85,6 +85,7 @@ HTML:
 
 	resp, err := p.client.Do(req)
 	if err != nil {
+		log.Printf("❌ ОШИБКА client.Do: %v", err)
 		return nil, fmt.Errorf("ошибка вызова Ollama: %w", err)
 	}
 	defer resp.Body.Close()

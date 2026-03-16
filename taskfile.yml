@@ -18,6 +18,7 @@ tasks:
         done
       - echo "Ollama ready, pulling model..."
       - task: ollama-pull
+      - task: kafka-create-topic
 
   up:
     desc: Start all services
@@ -64,21 +65,28 @@ tasks:
       - docker exec -it internship-kafka bash
 
   kafka-topics:
-    desc: List Kafka topics
-    cmds:
-      - docker exec internship-kafka kafka-topics --list --bootstrap-server localhost:9092
+  desc: List Kafka topics
+  cmds:
+    - docker exec internship-kafka /opt/kafka/bin/kafka-topics.sh --list --bootstrap-server localhost:9092
 
   kafka-create-topic:
     desc: Create a topic (use TOPIC=name)
     cmds:
-      - docker exec internship-kafka kafka-topics --create --topic {{.TOPIC}} --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
+      - docker exec internship-kafka /opt/kafka/bin/kafka-topics.sh --create --topic {{.TOPIC}} --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1 --if-not-exists
     vars:
       TOPIC: '{{.TOPIC | default "internships"}}'
 
   kafka-consume:
     desc: Consume messages from topic (use TOPIC=name)
     cmds:
-      - docker exec -it internship-kafka kafka-console-consumer --bootstrap-server localhost:9092 --topic {{.TOPIC}} --from-beginning
+      - docker exec -it internship-kafka /opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic {{.TOPIC}} --from-beginning
+    vars:
+      TOPIC: '{{.TOPIC | default "internships"}}'
+
+  kafka-produce:
+    desc: Produce test message (use TOPIC=name)
+    cmds:
+      - echo "test message" | docker exec -i internship-kafka /opt/kafka/bin/kafka-console-producer.sh --bootstrap-server localhost:9092 --topic {{.TOPIC}}
     vars:
       TOPIC: '{{.TOPIC | default "internships"}}'
 
