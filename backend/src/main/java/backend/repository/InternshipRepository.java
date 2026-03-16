@@ -2,6 +2,8 @@ package backend.repository;
 
 import backend.entity.CompanyEntity;
 import backend.entity.InternshipEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -16,4 +18,6 @@ public interface InternshipRepository extends JpaRepository<InternshipEntity, UU
             CompanyEntity company,
             String positionName
     );
+
+    Page<InternshipEntity> findAll(Pageable pageable);
 }

@@ -15,6 +15,7 @@ public class CompanyService {
 
     private final CompanyRepository companyRepository;
 
+
     @Transactional
     public CompanyEntity findOrCreateCompany(CompanyInternship proto) {
         companyRepository.insertIfNotExists(
@@ -27,7 +28,22 @@ public class CompanyService {
         return companyRepository.findByCompanyName(proto.getCompanyName())
                 .orElseThrow(() ->
                         new RuntimeException("Company with name " + proto.getCompanyName() + " not found"));
+    }
 
+
+    @Transactional
+    public void saveCompaniesBatch(Iterable<CompanyInternship> companies) {
+        for (CompanyInternship c : companies) {
+            insertIfNotExists(c);
+        }
+    }
+
+    private void insertIfNotExists(CompanyInternship proto) {
+        companyRepository.insertIfNotExists(
+                UUID.randomUUID(),
+                proto.getCompanyName(),
+                proto.getSourceUrl(),
+                proto.getSourceSite()
+        );
     }
 }
-
