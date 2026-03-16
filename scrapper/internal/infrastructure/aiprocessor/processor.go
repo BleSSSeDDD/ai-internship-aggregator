@@ -58,7 +58,7 @@ HTML:
   "tech_stack": ["технология1", "технология2"],
   "min_salary": число (если не указано, ставь 0),
   "location": "город или Remote",
-  "internship_dates": "сроки стажировки",
+  "internship_dates": "сроки стажировки (одной строкой, через запятые)",
   "selection_process": "этапы отбора",
   "description": "описание задач",
   "application_deadline": "дедлайн подачи",
@@ -85,7 +85,7 @@ HTML:
 
 	resp, err := p.client.Do(req)
 	if err != nil {
-		log.Printf("❌ ОШИБКА client.Do: %v", err)
+		log.Printf("ОШИБКА client.Do: %v", err)
 		return nil, fmt.Errorf("ошибка вызова Ollama: %w", err)
 	}
 	defer resp.Body.Close()
