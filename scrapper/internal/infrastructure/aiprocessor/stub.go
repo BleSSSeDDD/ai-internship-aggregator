@@ -14,12 +14,12 @@ func NewStub() domain.AIProcessor {
 }
 
 // Process возвращает один трек стажировки (теперь это CompanyInternship)
-func (s *StubProcessor) Process(ctx context.Context, text string) (*vacancy.CompanyInternship, error) {
+func (s *StubProcessor) Process(ctx context.Context, text string, link string) (*vacancy.CompanyInternship, error) {
 	if text == "qwe" {
 
 		return &vacancy.CompanyInternship{
 			CompanyName:            "Тинькофф",
-			SourceUrl:              "https://hh.ru/vacancy/123456",
+			SourceUrl:              link,
 			SourceSite:             "hh.ru",
 			PositionName:           "Стажер-разработчик Go",
 			TechStack:              []string{"Go", "PostgreSQL", "Kafka", "gRPC"},

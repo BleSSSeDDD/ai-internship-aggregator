@@ -18,7 +18,6 @@ import (
 
 const AI_RESPONSE_TIMEOUT = 60 * time.Minute
 
-// Структура для ответа от Ollama
 type ollamaResponse struct {
 	Response string `json:"response"`
 }
@@ -37,8 +36,8 @@ func NewAiProcessor(ollamaURL, model string) domain.AIProcessor {
 	}
 }
 
-// Process получает HTML, отправляет в Ollama, возвращает структуру стажировки
-func (p *aiProcessor) Process(ctx context.Context, html string) (*vacancy.CompanyInternship, error) {
+// получает HTML, отправляет в Ollama, возвращает структуру стажировки
+func (p *aiProcessor) Process(ctx context.Context, html string, link string) (*vacancy.CompanyInternship, error) {
 	log.Println("зашел в Process")
 
 	cleanText := cleanHTML(html)
@@ -53,18 +52,18 @@ HTML:
 {
   "company_name": "название компании",
   "source_url": "ссылка на страницу",
-  "source_site": "домен сайта (например, yandex.ru)",
+  "source_site": "%s",
   "position_name": "название позиции",
   "tech_stack": ["технология1", "технология2"],
   "min_salary": число (если не указано, ставь 0),
   "location": "город или Remote",
-  "internship_dates": "сроки стажировки (одной строкой, через запятые)",
-  "selection_process": "этапы отбора",
+  "internship_dates": "сроки стажировки",
+  "selection_process": "этапы отбора (одной строкой, через запятые)",
   "description": "описание задач",
   "application_deadline": "дедлайн подачи",
   "contact_info": "контакты",
   "experience_requirements": "требования к кандидату"
-}`, cleanText)
+}`, cleanText, link)
 
 	requestBody, err := json.Marshal(map[string]interface{}{
 		"model":  p.modelName,

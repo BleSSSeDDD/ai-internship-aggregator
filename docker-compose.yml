@@ -122,7 +122,7 @@ services:
 
   parser:
     build: ./scrapper
-    container_name: ai-aggregator-parser
+    container_name: internship-parser
     depends_on:
       kafka:
         condition: service_healthy

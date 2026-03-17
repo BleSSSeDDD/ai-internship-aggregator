@@ -16,13 +16,13 @@ func NewScraperUsecase(p domain.Parser, ai domain.AIProcessor, pub domain.Publis
 	return &ScraperUsecase{p, ai, pub}
 }
 
-func (u *ScraperUsecase) Run(ctx context.Context, url string) error {
-	text, err := u.parser.GetRawContent(ctx, url)
+func (u *ScraperUsecase) Run(ctx context.Context, link string) error {
+	text, err := u.parser.GetRawContent(ctx, link)
 	if err != nil {
 		return err
 	}
 
-	data, err := u.ai.Process(ctx, text)
+	data, err := u.ai.Process(ctx, text, link)
 	if err != nil {
 		return err
 	}
