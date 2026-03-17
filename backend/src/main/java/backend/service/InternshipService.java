@@ -1,15 +1,18 @@
 package backend.service;
 
+import backend.dto.AllTechDTO;
 import backend.dto.InternshipDTO;
 import backend.entity.CompanyEntity;
 import backend.entity.InternshipEntity;
 import backend.mapper.InternshipMapper;
 import backend.repository.InternshipRepository;
+import backend.specifications.InternshipSpecifications;
 import com.aggregator.internship.CompanyInternship;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Pageable;
@@ -98,5 +101,49 @@ public class InternshipService {
         internshipEntityPage =  internshipRepository.findAll(pageable);
 
         return internshipEntityPage.map(internshipMapper::toDTO);
+    }
+
+    public Page<InternshipDTO> searchInternships(
+            Set<String> tech,
+            Integer minSalary,
+            String location,
+            String companyName,
+            int page,
+            int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        Specification<InternshipEntity> specification = Specification.unrestricted();
+
+        if (tech != null && !tech.isEmpty()) {
+            specification = specification.and(InternshipSpecifications.hasTechnologys(tech));
+        }
+
+        if (minSalary != null) {
+            specification = specification.and(InternshipSpecifications.hasMinSalary(minSalary));
+        }
+
+        if (location != null && !location.isBlank()) {
+            specification = specification.and(InternshipSpecifications.hasLocation(location));
+        }
+
+        if (companyName != null && !companyName.isBlank()) {
+            specification = specification.and(InternshipSpecifications.hasCompanyName(companyName));
+        }
+
+        Page<InternshipEntity> foundInternships = internshipRepository.findAll(specification, pageable);
+
+        log.info("Find All is good");
+
+        return foundInternships.map(internshipMapper::toDTO);
+    }
+
+    public List<AllTechDTO> getAllTech() {
+
+        log.info("getAllTech complete");
+
+        return internshipRepository.getAllTech().stream()
+                .map(AllTechDTO::new)
+                .toList();
     }
 }

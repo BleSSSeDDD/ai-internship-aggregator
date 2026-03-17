@@ -20,12 +20,12 @@ public class CompanyService {
     public CompanyEntity findOrCreateCompany(CompanyInternship proto) {
         companyRepository.insertIfNotExists(
                 UUID.randomUUID(),
-                proto.getCompanyName(),
+                proto.getCompanyName().toUpperCase(),
                 proto.getSourceUrl(),
                 proto.getSourceSite()
         );
 
-        return companyRepository.findByCompanyName(proto.getCompanyName())
+        return companyRepository.findByCompanyName(proto.getCompanyName().toUpperCase())
                 .orElseThrow(() ->
                         new RuntimeException("Company with name " + proto.getCompanyName() + " not found"));
     }
@@ -41,7 +41,7 @@ public class CompanyService {
     private void insertIfNotExists(CompanyInternship proto) {
         companyRepository.insertIfNotExists(
                 UUID.randomUUID(),
-                proto.getCompanyName(),
+                proto.getCompanyName().toUpperCase(),
                 proto.getSourceUrl(),
                 proto.getSourceSite()
         );

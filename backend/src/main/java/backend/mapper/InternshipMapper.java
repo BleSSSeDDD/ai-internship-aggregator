@@ -1,5 +1,6 @@
 package backend.mapper;
 
+import backend.dto.AllTechDTO;
 import backend.dto.InternshipDTO;
 import backend.entity.InternshipEntity;
 import org.mapstruct.Mapper;
