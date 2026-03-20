@@ -14,10 +14,10 @@ func NewStub() domain.AIProcessor {
 }
 
 // Process возвращает один трек стажировки (теперь это CompanyInternship)
-func (s *StubProcessor) Process(ctx context.Context, text string, link string) (*vacancy.CompanyInternship, error) {
+func (s *StubProcessor) Process(ctx context.Context, text string, link string) ([]*vacancy.CompanyInternship, error) {
 	if text == "qwe" {
 
-		return &vacancy.CompanyInternship{
+		return []*vacancy.CompanyInternship{&vacancy.CompanyInternship{
 			CompanyName:            "Тинькофф",
 			SourceUrl:              link,
 			SourceSite:             "hh.ru",
@@ -31,10 +31,10 @@ func (s *StubProcessor) Process(ctx context.Context, text string, link string) (
 			ApplicationDeadline:    "2025-05-15",
 			ContactInfo:            "hr@tinkoff.ru",
 			ExperienceRequirements: "Знание Go, понимание многопоточности, SQL",
-		}, nil
+		}}, nil
 	}
 
-	return &vacancy.CompanyInternship{
+	return []*vacancy.CompanyInternship{&vacancy.CompanyInternship{
 		CompanyName:  "Тестовая Компания",
 		SourceUrl:    "https://example.com/vacancy",
 		SourceSite:   "hh.ru",
@@ -42,5 +42,5 @@ func (s *StubProcessor) Process(ctx context.Context, text string, link string) (
 		TechStack:    []string{"Go", "PostgreSQL", "Kafka"},
 		MinSalary:    50000,
 		Location:     "Москва",
-	}, nil
+	}}, nil
 }

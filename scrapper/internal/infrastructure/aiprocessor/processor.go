@@ -36,34 +36,36 @@ func NewAiProcessor(ollamaURL, model string) domain.AIProcessor {
 	}
 }
 
-// получает HTML, отправляет в Ollama, возвращает структуру стажировки
-func (p *aiProcessor) Process(ctx context.Context, html string, link string) (*vacancy.CompanyInternship, error) {
+// получает HTML, отправляет в Ollama, возвращает массив структур стажировок
+func (p *aiProcessor) Process(ctx context.Context, html string, link string) ([]*vacancy.CompanyInternship, error) {
 	log.Println("зашел в Process")
 
 	cleanText := cleanHTML(html)
 	log.Printf("HTML был %d символов, стал %d", len(html), len(cleanText))
 
-	prompt := fmt.Sprintf(`Ты — парсер вакансий. Извлеки из HTML информацию о стажировке.
+	prompt := fmt.Sprintf(`Ты — парсер вакансий. Извлеки из HTML информацию о стажировках.
 
 HTML:
 %s
 
-Верни ТОЛЬКО JSON в таком формате (без пояснений, только сам JSON):
-{
-  "company_name": "название компании",
-  "source_url": "ссылка на страницу",
-  "source_site": "%s",
-  "position_name": "название позиции",
-  "tech_stack": ["технология1", "технология2"],
-  "min_salary": число (если не указано, ставь 0),
-  "location": "город или Remote",
-  "internship_dates": "сроки стажировки",
-  "selection_process": "этапы отбора (одной строкой, через запятые)",
-  "description": "описание задач",
-  "application_deadline": "дедлайн подачи",
-  "contact_info": "контакты",
-  "experience_requirements": "требования к кандидату"
-}`, cleanText, link)
+Верни ТОЛЬКО JSON массив в таком формате (без пояснений, только сам JSON). Если стажировка одна, верни массив с одним объектом:
+[
+  {
+    "company_name": "название компании",
+    "source_url": "ссылка на страницу",
+    "source_site": "%s",
+    "position_name": "название позиции",
+    "tech_stack": ["технология1", "технология2"],
+    "min_salary": число (если не указано, ставь 0),
+    "location": "город или Remote",
+    "internship_dates": "сроки стажировки",
+    "selection_process": "этапы отбора (одной строкой, через запятые)",
+    "description": "описание задач",
+    "application_deadline": "дедлайн подачи",
+    "contact_info": "контакты",
+    "experience_requirements": "требования к кандидату"
+  }
+]`, cleanText, link)
 
 	requestBody, err := json.Marshal(map[string]interface{}{
 		"model":  p.modelName,
@@ -105,14 +107,21 @@ HTML:
 		return nil, fmt.Errorf("ошибка парсинга ответа Ollama: %w", err)
 	}
 
-	var internship vacancy.CompanyInternship
-	if err := json.Unmarshal([]byte(ollamaResp.Response), &internship); err != nil {
-		return nil, fmt.Errorf("ошибка парсинга JSON от модели: %w\nОтвет модели: %s", err, ollamaResp.Response)
+	// Парсим JSON массив
+	var internships []*vacancy.CompanyInternship
+	if err := json.Unmarshal([]byte(ollamaResp.Response), &internships); err != nil {
+		// Если не получилось как массив, пробуем как один объект
+		var single vacancy.CompanyInternship
+		if err := json.Unmarshal([]byte(ollamaResp.Response), &single); err != nil {
+			return nil, fmt.Errorf("ошибка парсинга JSON от модели: %w\nОтвет модели: %s", err, ollamaResp.Response)
+		}
+		internships = []*vacancy.CompanyInternship{&single}
 	}
 
+	log.Printf("найдено %d стажировок", len(internships))
 	log.Println("выхожу из функции Process")
 
-	return &internship, nil
+	return internships, nil
 }
 
 func cleanHTML(html string) string {

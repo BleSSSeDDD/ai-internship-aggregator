@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"log"
 
 	"github.com/BleSSSeDDD/ai-internship-aggregator/internal/domain"
 )
@@ -26,6 +27,8 @@ func (u *ScraperUsecase) Run(ctx context.Context, link string) error {
 	if err != nil {
 		return err
 	}
+
+	log.Printf("Найдено %d стажировок на странице %s", len(data), link)
 
 	return u.publisher.Publish(ctx, data)
 }
