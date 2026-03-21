@@ -21,7 +21,7 @@ const (
 )
 
 func main() {
-	p := httpclient.NewParser()
+	p := httpclient.NewStubClient()
 	a := aiprocessor.NewAiProcessor("http://internship-ollama:11434", "qwen2.5:3b")
 	k := kafka.NewPublisher(
 		[]string{"internship-kafka:9092"},
