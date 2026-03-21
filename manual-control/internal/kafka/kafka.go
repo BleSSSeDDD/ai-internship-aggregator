@@ -32,13 +32,11 @@ func NewProducer(brokers []string) (*Producer, error) {
 }
 
 func (p *Producer) SendInternship(internship *vacancy.CompanyInternship) (int32, int64, error) {
-	// Сериализуем в protobuf
 	data, err := proto.Marshal(internship)
 	if err != nil {
 		return 0, 0, fmt.Errorf("ошибка сериализации protobuf: %w", err)
 	}
 
-	// Отправляем в Kafka
 	msg := &sarama.ProducerMessage{
 		Topic: p.topic,
 		Value: sarama.ByteEncoder(data),
@@ -50,7 +48,7 @@ func (p *Producer) SendInternship(internship *vacancy.CompanyInternship) (int32,
 		return 0, 0, fmt.Errorf("ошибка отправки в Kafka: %w", err)
 	}
 
-	log.Printf("📤 Отправлено в Kafka [%s] partition=%d offset=%d", p.topic, partition, offset)
+	log.Printf("Отправлено в Kafka [%s] partition=%d offset=%d", p.topic, partition, offset)
 	return partition, offset, nil
 }
 

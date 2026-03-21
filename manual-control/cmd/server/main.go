@@ -17,28 +17,25 @@ import (
 func main() {
 	kafkaProducer, err := kafka.NewProducer([]string{"internship-kafka:9092"})
 	if err != nil {
-		log.Fatalf("❌ Ошибка создания Kafka producer: %v", err)
+		log.Fatalf("Ошибка создания Kafka producer: %v", err)
 	}
 	defer kafkaProducer.Close()
 
-	log.Println("✅ Kafka producer инициализирован")
+	log.Println("Kafka producer инициализирован")
 
 	h := handlers.NewHandlers(kafkaProducer)
 
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
 
-	router.LoadHTMLGlob("manual-control/templates/*")
+	router.LoadHTMLGlob("templates/*")
 
-	// Статические файлы
 	router.Static("/static", "./static")
 
-	// Маршруты
 	router.GET("/", h.Index)
 	router.POST("/submit", h.Submit)
 	router.GET("/health", h.Health)
 
-	// HTTP сервер
 	srv := &http.Server{
 		Addr:         ":2228",
 		Handler:      router,
@@ -46,11 +43,10 @@ func main() {
 		WriteTimeout: 10 * time.Second,
 	}
 
-	// Graceful shutdown
 	go func() {
-		log.Printf("🚀 Сервер запущен на http://localhost:2228")
+		log.Printf("Сервер запущен на порту 2228")
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("❌ Ошибка запуска сервера: %v", err)
+			log.Fatalf("Ошибка запуска сервера: %v", err)
 		}
 	}()
 
@@ -58,11 +54,11 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	log.Println("🛑 Завершение работы сервера...")
+	log.Println("Завершение работы сервера...")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatalf("❌ Ошибка при остановке сервера: %v", err)
+		log.Fatalf("Ошибка при остановке сервера: %v", err)
 	}
-	log.Println("✅ Сервер остановлен")
+	log.Println("Сервер остановлен")
 }
