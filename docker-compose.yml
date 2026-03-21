@@ -148,6 +148,34 @@ services:
     networks:
       - app-network
 
+ # ---- Manual Control (Admin Panel)
+  manual-control:
+    build:
+      context: ./manual-control
+      dockerfile: Dockerfile
+    container_name: internship-manual-control
+    ports:
+      - "2228:2228"
+    environment:
+      - KAFKA_BROKERS=kafka:9092
+      - PORT=2228
+      - TZ=Europe/Moscow
+    depends_on:
+      kafka:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:2228/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+      
 volumes:
   kafka_data:
   ollama_data:
