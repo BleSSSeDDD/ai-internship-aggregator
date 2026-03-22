@@ -13,10 +13,10 @@ import (
 )
 
 type Handlers struct {
-	kafkaProducer *kafka.Producer
+	kafkaProducer kafka.Publisher
 }
 
-func NewHandlers(producer *kafka.Producer) *Handlers {
+func NewHandlers(producer kafka.Publisher) *Handlers {
 	return &Handlers{
 		kafkaProducer: producer,
 	}

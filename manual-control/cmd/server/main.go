@@ -15,7 +15,7 @@ import (
 )
 
 func main() {
-	kafkaProducer, err := kafka.NewProducer([]string{"internship-kafka:9092"})
+	kafkaProducer, err := kafka.NewPublisher([]string{"internship-kafka:9092"})
 	if err != nil {
 		log.Fatalf("Ошибка создания Kafka producer: %v", err)
 	}

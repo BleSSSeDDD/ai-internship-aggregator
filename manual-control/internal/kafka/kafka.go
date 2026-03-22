@@ -9,12 +9,17 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-type Producer struct {
+type Publisher interface {
+	SendInternship(internship *vacancy.CompanyInternship) (int32, int64, error)
+	Close() error
+}
+
+type publisher struct {
 	producer sarama.SyncProducer
 	topic    string
 }
 
-func NewProducer(brokers []string) (*Producer, error) {
+func NewPublisher(brokers []string) (Publisher, error) {
 	config := sarama.NewConfig()
 	config.Producer.Return.Successes = true
 	config.Producer.RequiredAcks = sarama.WaitForAll
@@ -25,13 +30,13 @@ func NewProducer(brokers []string) (*Producer, error) {
 		return nil, fmt.Errorf("ошибка создания Kafka producer: %w", err)
 	}
 
-	return &Producer{
+	return &publisher{
 		producer: producer,
 		topic:    "internships",
 	}, nil
 }
 
-func (p *Producer) SendInternship(internship *vacancy.CompanyInternship) (int32, int64, error) {
+func (p *publisher) SendInternship(internship *vacancy.CompanyInternship) (int32, int64, error) {
 	data, err := proto.Marshal(internship)
 	if err != nil {
 		return 0, 0, fmt.Errorf("ошибка сериализации protobuf: %w", err)
@@ -52,6 +57,6 @@ func (p *Producer) SendInternship(internship *vacancy.CompanyInternship) (int32,
 	return partition, offset, nil
 }
 
-func (p *Producer) Close() error {
+func (p *publisher) Close() error {
 	return p.producer.Close()
 }
