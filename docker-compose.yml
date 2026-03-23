@@ -6,9 +6,8 @@ services:
     image: apache/kafka:4.2.0
     container_name: internship-kafka
     ports:
-      - "9094:9094" # Порт для подключения с вашего ПК (localhost:9094)
+      - "9094:9094" #на локалхост 9094 проброс, хотя это не надо, у нас она живёт в докере, потом спрячем
     environment:
-      # Настройки узла
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: controller,broker
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@internship-kafka:9093
@@ -43,6 +42,7 @@ services:
     networks:
       - app-network
 
+  # юай нормик
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: internship-kafka-ui
