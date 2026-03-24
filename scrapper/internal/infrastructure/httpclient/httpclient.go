@@ -98,11 +98,3 @@ func shouldRetry(err error, statusCode int) bool {
 
 	return false
 }
-
-// для мока вот такое есть:
-// func (p *vacancyParser) GetRawContent(ctx context.Context, url string) (string, error) {
-// 	if url == "ivan sigma" {
-// 		return string("qwe"), nil
-// 	}
-// 	return string("da eto tak)"), nil
-// }

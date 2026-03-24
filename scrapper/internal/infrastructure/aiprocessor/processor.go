@@ -49,8 +49,8 @@ func (p *aiProcessor) Process(ctx context.Context, html string, link string) ([]
 		"model":  p.modelName,
 		"prompt": prompt,
 		"stream": false,
-		"options": map[string]interface{}{ // дополнительные параметры для стабильности
-			"temperature": 0.4, // низкая температура = более детерминированный ответ
+		"options": map[string]interface{}{
+			"temperature": 0.4,
 			"top_p":       0.9,
 		},
 	})
@@ -172,8 +172,8 @@ HTML для парсинга:
 ВЕРНИ ТОЛЬКО JSON МАССИВ, НИЧЕГО ДРУГОГО.`, link, link, link, link, cleanText)
 }
 
+// Удаляем ```json ... ``` обертки но вообще это не обязательно
 func cleanModelResponse(response string) string {
-	// Удаляем ```json ... ``` обертки
 	response = strings.TrimSpace(response)
 	if strings.HasPrefix(response, "```json") {
 		response = strings.TrimPrefix(response, "```json")

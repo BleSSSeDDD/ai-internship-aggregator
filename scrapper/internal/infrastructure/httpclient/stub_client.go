@@ -15,7 +15,6 @@ func NewStubClient() domain.Parser {
 }
 
 func (p *stubClient) GetRawContent(ctx context.Context, url string) (string, error) {
-	// Сделай структурированный текст, который будет легче парсить
 	return string(`Стажировка в компании ООО "ИВАН"
 
 Направления стажировки:
