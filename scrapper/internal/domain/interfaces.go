@@ -11,13 +11,13 @@ type Parser interface {
 	GetRawContent(ctx context.Context, url string) (string, error)
 }
 
-// AIProcessor - умеет превратить мусорный текст в структуру Internship
+// AIProcessor - умеет превратить мусорный текст в массив структур Internship
 type AIProcessor interface {
-	Process(ctx context.Context, text string) (*vacancy.CompanyInternship, error)
+	Process(ctx context.Context, text string, link string) ([]*vacancy.CompanyInternship, error)
 }
 
-// Publisher - умеет отправить готовую структуру в Кафку
+// Publisher - умеет отправить готовые структуры в Кафку
 type Publisher interface {
-	Publish(ctx context.Context, internship *vacancy.CompanyInternship) error
+	Publish(ctx context.Context, internship []*vacancy.CompanyInternship) error
 	Close() error
 }

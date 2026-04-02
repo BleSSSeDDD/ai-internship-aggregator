@@ -27,23 +27,25 @@ func NewPublisher(brokers []string, topic string) domain.Publisher {
 	return &publisher{writer: w}
 }
 
-func (p *publisher) Publish(ctx context.Context, internship *vacancy.CompanyInternship) error {
-	data, err := proto.Marshal(internship)
-	if err != nil {
-		return fmt.Errorf("failed to marshal: %w", err)
-	}
+func (p *publisher) Publish(ctx context.Context, internships []*vacancy.CompanyInternship) error {
+	for _, internship := range internships {
+		data, err := proto.Marshal(internship)
+		if err != nil {
+			return fmt.Errorf("failed to marshal: %w", err)
+		}
 
-	msg := kafka.Message{
-		Key:   []byte(internship.CompanyName),
-		Value: data,
-		Headers: []kafka.Header{
-			{Key: "source", Value: []byte(internship.SourceSite)},
-		},
-		Time: time.Now(),
-	}
+		msg := kafka.Message{
+			Key:   []byte(internship.CompanyName),
+			Value: data,
+			Headers: []kafka.Header{
+				{Key: "source", Value: []byte(internship.SourceSite)},
+			},
+			Time: time.Now(),
+		}
 
-	if err := p.writer.WriteMessages(ctx, msg); err != nil {
-		return fmt.Errorf("failed to write to kafka: %w", err)
+		if err := p.writer.WriteMessages(ctx, msg); err != nil {
+			return fmt.Errorf("failed to write to kafka: %w", err)
+		}
 	}
 
 	return nil

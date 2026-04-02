@@ -6,9 +6,8 @@ services:
     image: apache/kafka:4.2.0
     container_name: internship-kafka
     ports:
-      - "9094:9094" # Порт для подключения с вашего ПК (localhost:9094)
+      - "9094:9094" #на локалхост 9094 проброс, хотя это не надо, у нас она живёт в докере, потом спрячем
     environment:
-      # Настройки узла
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: controller,broker
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@internship-kafka:9093
@@ -29,6 +28,10 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       KAFKA_CLUSTER_ID: "5L6g3nShT-eMCtK--X86sw"
+
+      #время нормальное
+      TZ: "Europe/Moscow"
+
     volumes:
       - kafka_data:/var/lib/kafka/data
     healthcheck:
@@ -39,6 +42,7 @@ services:
     networks:
       - app-network
 
+  # юай нормик
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: internship-kafka-ui
@@ -50,6 +54,8 @@ services:
       
       # короче подсос прото пока не работает потом починим это фигня
       KAFKA_CLUSTERS_0_PROPERTIES_SECURITY_PROTOCOL: PLAINTEXT
+
+      TZ: "Europe/Moscow"
     volumes:
       - ./proto:/etc/kafka-ui/proto:ro  
     depends_on:
@@ -69,6 +75,8 @@ services:
       POSTGRES_USER: app
       POSTGRES_PASSWORD: secret
       POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=C"
+      TZ: "Europe/Moscow"
+
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -93,6 +101,7 @@ services:
       - OLLAMA_NUM_PARALLEL=2
       - OLLAMA_MAX_LOADED_MODELS=1
       - OLLAMA_CONTEXT_LENGTH=16384
+      - TZ=Europe/Moscow
     healthcheck:
       test: ["CMD", "ollama", "list"]
       interval: 10s
@@ -107,6 +116,8 @@ services:
     image: caddy:2.9-alpine
     container_name: internship-caddy
     restart: unless-stopped
+    environment:
+      - TZ=Europe/Moscow
     ports:
       - "80:80"
       - "443:443"
@@ -122,16 +133,49 @@ services:
 
   parser:
     build: ./scrapper
-    container_name: ai-aggregator-parser
+    container_name: internship-parser
+    environment:
+      - TZ=Europe/Moscow
     depends_on:
       kafka:
         condition: service_healthy
       ollama:
         condition: service_healthy
     restart: unless-stopped
+    volumes:
+    - /etc/localtime:/etc/localtime:ro
+    - /etc/timezone:/etc/timezone:ro
     networks:
       - app-network
 
+ # ---- Manual Control (Admin Panel)
+  manual-control:
+    build:
+      context: ./manual-control
+      dockerfile: Dockerfile
+    container_name: internship-manual-control
+    ports:
+      - "2228:2228"
+    environment:
+      - KAFKA_BROKERS=kafka:9092
+      - PORT=2228
+      - TZ=Europe/Moscow
+    depends_on:
+      kafka:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:2228/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+      
 volumes:
   kafka_data:
   ollama_data:

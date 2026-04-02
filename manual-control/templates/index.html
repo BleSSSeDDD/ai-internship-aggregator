@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ-панель | Добавление стажировки в Kafka</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h1>
+                    <span>📝</span>
+                    Добавление стажировки
+                </h1>
+                <p>Ручное добавление вакансии в Kafka | Gin + Protobuf</p>
+            </div>
+            <div class="card-body">
+                {{if .Success}}
+                <div class="alert alert-success">
+                    <div>
+                        ✅ Стажировка успешно отправлена в Kafka!<br>
+                        📍 Партиция: <strong>{{.Partition}}</strong> | 📍 Оффсет: <strong>{{.Offset}}</strong>
+                    </div>
+                </div>
+                
+                <div class="json-preview">
+                    <strong>📦 Отправленные данные (JSON):</strong>
+                    <pre>{{.InternshipJSON}}</pre>
+                </div>
+                <hr>
+                {{end}}
+                
+                <div class="status-bar">
+                    <span class="status-online">Kafka Connected</span>
+                    <span class="badge">Topic: internships</span>
+                    <span class="badge">Broker: internsip-kafka:9092</span>
+                    <span class="badge">Gin Framework</span>
+                </div>
+                
+                <form method="POST" action="/submit" id="internshipForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Название компании <span class="required">*</span></label>
+                            <input type="text" name="company_name" required placeholder="ООО ИВАН">
+                        </div>
+                        <div class="form-group">
+                            <label>Зарплата (руб)</label>
+                            <input type="number" name="min_salary" placeholder="50000">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Ссылка на вакансию</label>
+                            <input type="text" name="source_url" placeholder="https://example.com/vacancy">
+                        </div>
+                        <div class="form-group">
+                            <label>Сайт источник</label>
+                            <input type="text" name="source_site" placeholder="https://example.com">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Название позиции <span class="required">*</span></label>
+                        <input type="text" name="position_name" required placeholder="Стажер-разработчик">
+                        <div class="info-text">Укажите должность и направление, если есть</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Технологии <span class="required">*</span></label>
+                        <input type="text" name="tech_stack" required placeholder="Go, Kafka, gRPC, HTML, CSS, JavaScript">
+                        <div class="info-text">Введите технологии через запятую (пробелы не важны)</div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Локация</label>
+                            <input type="text" name="location" placeholder="Москва, Санкт-Петербург, Remote">
+                        </div>
+                        <div class="form-group">
+                            <label>Сроки стажировки</label>
+                            <input type="text" name="internship_dates" placeholder="июнь-август 2026">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Процесс отбора</label>
+                        <textarea name="selection_process" placeholder="тестовое задание, техническое собеседование, HR-собеседование"></textarea>
+                        <div class="info-text">Укажите этапы отбора через запятую</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Описание задач</label>
+                        <textarea name="description" placeholder="Разработка backend сервисов на Go, работа с Kafka и gRPC..."></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Дедлайн подачи</label>
+                            <input type="text" name="application_deadline" placeholder="2026-05-30">
+                        </div>
+                        <div class="form-group">
+                            <label>Контактная информация</label>
+                            <input type="text" name="contact_info" placeholder="hr@company.ru">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Требования к кандидату</label>
+                        <textarea name="experience_requirements" placeholder="Знание Go, опыт работы с Kafka, понимание gRPC"></textarea>
+                    </div>
+                    
+                    <button type="submit" id="submitBtn">
+                        🚀 Отправить в Kafka
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('internshipForm');
+        const submitBtn = document.getElementById('submitBtn');
+        
+        form.addEventListener('submit', function(e) {
+            submitBtn.innerHTML = '<span class="loading"></span> Отправка...';
+            submitBtn.disabled = true;
+            
+            setTimeout(function() {
+                if (submitBtn.disabled) {
+                    submitBtn.innerHTML = '🚀 Отправить в Kafka';
+                    submitBtn.disabled = false;
+                }
+            }, 10000);
+        });
+        
+        const techStackInput = document.querySelector('input[name="tech_stack"]');
+        techStackInput.addEventListener('change', function() {
+            if (this.value.trim() === '') {
+                this.style.borderColor = '#ef4444';
+            } else {
+                this.style.borderColor = '#e0e0e0';
+            }
+        });
+        
+        techStackInput.addEventListener('blur', function() {
+            if (this.value.trim() !== '') {
+                this.value = this.value.split(',').map(t => t.trim()).join(', ');
+            }
+        });
+        
+        console.log('Админ-панель загружена ✅');
+    </script>
+</body>
+</html>

@@ -99,7 +99,6 @@ func workerParser(ctx context.Context, wg *sync.WaitGroup, scrapper *usecase.Scr
 			}{url: url, err: ctx.Err()}
 			return
 		default:
-			// задержка между запросами к одному воркеру
 			time.Sleep(2 * time.Second)
 
 			log.Printf("Начинаю парсинг: %s", url)
