@@ -1,0 +1,126 @@
+.history-view {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 36px 24px 48px;
+}
+
+.history-grid {
+  margin-top: 24px;
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 18px;
+}
+
+.history-card {
+  border-radius: 26px;
+  padding: 22px;
+}
+
+.history-card h2 {
+  margin: 0 0 18px;
+  font-size: 20px;
+}
+
+.history-empty {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.history-item {
+  display: grid;
+  grid-template-columns: 48px 1fr auto;
+  gap: 14px;
+  align-items: center;
+  padding: 14px 0;
+  border-top: 1px solid var(--border);
+}
+
+.history-item:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+.history-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-size: 20px;
+}
+
+.history-info {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.history-info span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.history-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.history-actions button {
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.05);
+  color: var(--text);
+  padding: 10px 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.history-timeline {
+  display: grid;
+  gap: 14px;
+}
+
+.timeline-item {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.timeline-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-top: 6px;
+  flex-shrink: 0;
+  background: var(--muted);
+}
+
+.timeline-dot.like { background: var(--green); }
+.timeline-dot.skip { background: var(--red); }
+.timeline-dot.super { background: var(--yellow); }
+.timeline-dot.restore { background: var(--cyan); }
+.timeline-dot.unlike { background: var(--pink); }
+
+.timeline-item p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+@media (max-width: 880px) {
+  .history-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .history-item {
+    grid-template-columns: 1fr;
+    align-items: flex-start;
+  }
+
+  .history-actions {
+    justify-content: flex-start;
+  }
+}
