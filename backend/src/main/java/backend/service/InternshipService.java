@@ -128,12 +128,12 @@ public class InternshipService {
         }
 
         if (companyName != null && !companyName.isBlank()) {
-            specification = specification.and(InternshipSpecifications.hasCompanyName(companyName));
+            specification = specification.and(InternshipSpecifications.hasCompanyName(companyName.toUpperCase()));
         }
 
         Page<InternshipEntity> foundInternships = internshipRepository.findAll(specification, pageable);
 
-        log.info("Find All is good");
+        log.info("Find All is good" + foundInternships.getTotalElements());
 
         return foundInternships.map(internshipMapper::toDTO);
     }

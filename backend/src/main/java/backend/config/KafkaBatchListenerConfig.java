@@ -19,11 +19,9 @@ public class KafkaBatchListenerConfig {
         ConcurrentKafkaListenerContainerFactory<String, byte[]> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
 
-        // Настраиваем consumer factory
         factory.setConsumerFactory(new DefaultKafkaConsumerFactory<>(consumerConfigs()));
 
-        // Включаем батчевый режим
-        factory.setBatchListener(true);
+         factory.setBatchListener(true);
         return factory;
     }
 

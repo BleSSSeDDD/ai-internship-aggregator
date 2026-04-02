@@ -15,7 +15,7 @@ public interface CompanyRepository extends JpaRepository<CompanyEntity, UUID>,
 
     Optional<CompanyEntity> findByCompanyName(String companyName);
 
-    @Modifying(clearAutomatically = true)
+    @Modifying
     @Query(value = """
     INSERT INTO company(id, company_name, source_url, source_site)
     VALUES (:id, :companyName, :sourceUrl, :sourceSite)

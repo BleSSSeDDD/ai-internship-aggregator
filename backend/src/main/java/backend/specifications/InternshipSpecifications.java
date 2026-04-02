@@ -16,10 +16,12 @@ public class InternshipSpecifications {
             return null;
         }
 
+
+
         return (root, query, cb) ->
-                cb.equal(
-                        cb.lower(root.get("location")),
-                        location.trim().toLowerCase()
+                cb.like(
+                        root.get("location"),
+                        "%" + location.trim() + "%"
                 );
     }
 
@@ -29,11 +31,12 @@ public class InternshipSpecifications {
         }
 
         return (root, query, cb) -> {
-            Join<InternshipEntity, CompanyEntity> join = root.join("company_name", JoinType.INNER);
 
-            return cb.equal(
-                    cb.lower(join.get("name")),
-                    companyName.trim().toLowerCase()
+            Join<InternshipEntity, CompanyEntity> join = root.join("company", JoinType.INNER);
+
+            return cb.like(
+                    join.get("companyName"),
+                    "%" + companyName.trim().toUpperCase() + "%"
             );
         };
     }
@@ -56,7 +59,7 @@ public class InternshipSpecifications {
             Predicate[] predicates = technologies.stream()
                     .filter(tech -> tech != null && !tech.isBlank())
                     .map(String::trim)
-                    .map(tech -> cb.isMember(tech, root.get("technology")))
+                    .map(tech -> cb.isMember(tech, root.get("techStack")))
                     .toArray(Predicate[]::new);
 
             return cb.and(predicates);

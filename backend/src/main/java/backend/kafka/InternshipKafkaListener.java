@@ -18,10 +18,7 @@ public class InternshipKafkaListener {
 
     private final InternshipService internshipService;
 
-    /**
-     * Батчевый слушатель Kafka
-     * Принимает сразу список сообщений и сохраняет их пачкой через saveBatch
-     */
+
     @KafkaListener(
             topics = "internships",
             groupId = "internship-db-consumer",
