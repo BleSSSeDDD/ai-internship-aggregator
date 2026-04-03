@@ -128,6 +128,7 @@ services:
       - caddy_config:/config
     depends_on:
       - kafka-ui
+      - frontend
     networks:
       - app-network
 
@@ -175,6 +176,13 @@ services:
       timeout: 3s
       retries: 3
       start_period: 10s
+
+  frontend:
+    build: ./internhub
+    container_name: internship-frontend
+    restart: unless-stopped
+    networks:
+      - app-network
       
 volumes:
   kafka_data:

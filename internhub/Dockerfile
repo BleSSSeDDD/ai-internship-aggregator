@@ -4,12 +4,11 @@ COPY package.json ./
 COPY vite.config.js ./
 RUN npm install
 COPY . .
-ARG VITE_API_URL=http://host.docker.internal:8082
-ENV VITE_API_URL=$VITE_API_URL
 RUN npm run build
 
-FROM nginx:alpine
-COPY --from=build /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+FROM alpine:latest
+RUN apk add --no-cache python3
+COPY --from=build /app/dist /usr/share/html
+WORKDIR /usr/share/html
 EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["python3", "-m", "http.server", "80"]
