@@ -16,7 +16,7 @@ localhost:8080 {
             Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
             Access-Control-Allow-Headers "Content-Type, Authorization"
         }
-        reverse_proxy backend:8081
+        reverse_proxy backend:8082
     }
     
     # Frontend

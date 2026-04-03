@@ -183,7 +183,7 @@ services:
     restart: unless-stopped
     networks:
       - app-network
-      
+
 volumes:
   kafka_data:
   ollama_data:
