@@ -10,10 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Set;
 
-@CrossOrigin(origins = {
-        "http://localhost:5173",
-        "http://localhost:3000"
-})@RestController
+@RestController
 @RequestMapping("/api/internship/")
 @RequiredArgsConstructor
 public class InternshipController {
