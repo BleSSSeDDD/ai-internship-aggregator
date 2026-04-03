@@ -1,18 +1,24 @@
-const DEFAULT_BASE_URL = (typeof import.meta !== 'undefined' && import.meta.env && (import.meta.env.VITE_API_URL || import.meta.env.REACT_APP_API_URL)) || 'http://localhost:8082';
-
+const DEFAULT_BASE_URL = (typeof import.meta !== 'undefined' && import.meta.env && (import.meta.env.VITE_API_URL || import.meta.env.REACT_APP_API_URL)) || '';
 export const BASE_URL = DEFAULT_BASE_URL.replace(/\/$/, '');
 
 function buildUrl(path, params) {
-  const url = new URL(`${BASE_URL}${path}`);
-  Object.entries(params || {}).forEach(([key, value]) => {
-    if (value == null || value === '' || (Array.isArray(value) && !value.length)) return;
-    if (Array.isArray(value)) {
-      value.forEach((entry) => url.searchParams.append(key, entry));
-      return;
+    let url;
+    if (BASE_URL) {
+        // Если BASE_URL задан явно (например, http://localhost:8081)
+        url = new URL(BASE_URL + path);
+    } else {
+        // В браузере используем текущий origin (адрес страницы, например http://localhost:8081)
+        url = new URL(path, window.location.origin);
     }
-    url.searchParams.set(key, String(value));
-  });
-  return url.toString();
+    Object.entries(params || {}).forEach(([key, value]) => {
+        if (value == null || value === '' || (Array.isArray(value) && !value.length)) return;
+        if (Array.isArray(value)) {
+            value.forEach((entry) => url.searchParams.append(key, entry));
+            return;
+        }
+        url.searchParams.set(key, String(value));
+    });
+    return url.toString();
 }
 
 function makeFallbackId(item) {

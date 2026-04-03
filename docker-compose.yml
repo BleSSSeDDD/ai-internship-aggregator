@@ -6,21 +6,15 @@ services:
     image: apache/kafka:4.2.0
     container_name: internship-kafka
     ports:
-      - "9094:9094" #на локалхост 9094 проброс, хотя это не надо, у нас она живёт в докере, потом спрячем
+      - "9094:9094"
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: controller,broker
       KAFKA_CONTROLLER_QUORUM_VOTERS: 1@internship-kafka:9093
-      
-      # Слушатели: 
-      # 9092 - внутри Docker сети (для Kafka UI)
-      # 9094 - снаружи для хоста (через localhost)
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093,EXTERNAL://0.0.0.0:9094
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://internship-kafka:9092,EXTERNAL://localhost:9094
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      
-      # Данные и репликация
       KAFKA_LOG_DIRS: /var/lib/kafka/data
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
@@ -28,10 +22,7 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       KAFKA_CLUSTER_ID: "5L6g3nShT-eMCtK--X86sw"
-
-      #время нормальное
       TZ: "Europe/Moscow"
-
     volumes:
       - kafka_data:/var/lib/kafka/data
     healthcheck:
@@ -42,7 +33,7 @@ services:
     networks:
       - app-network
 
-  # юай нормик
+  # Kafka UI
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: internship-kafka-ui
@@ -51,20 +42,17 @@ services:
     environment:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: internship-kafka:9092
-      
-      # короче подсос прото пока не работает потом починим это фигня
       KAFKA_CLUSTERS_0_PROPERTIES_SECURITY_PROTOCOL: PLAINTEXT
-
       TZ: "Europe/Moscow"
     volumes:
-      - ./proto:/etc/kafka-ui/proto:ro  
+      - ./proto:/etc/kafka-ui/proto:ro
     depends_on:
       kafka:
         condition: service_healthy
     networks:
       - app-network
 
-  # ---- PostgreSQL 18.2
+  # PostgreSQL 18.2
   postgres:
     image: postgres:18.2-alpine
     container_name: internship-postgres
@@ -76,7 +64,6 @@ services:
       POSTGRES_PASSWORD: secret
       POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=C"
       TZ: "Europe/Moscow"
-
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -87,8 +74,7 @@ services:
     networks:
       - app-network
 
-
-    # ---- Ollama
+  # Ollama
   ollama:
     image: ollama/ollama:latest
     container_name: internship-ollama
@@ -111,7 +97,7 @@ services:
     networks:
       - app-network
 
-  # ---- Caddy 
+  # Caddy
   caddy:
     image: caddy:2.9-alpine
     container_name: internship-caddy
@@ -144,12 +130,12 @@ services:
         condition: service_healthy
     restart: unless-stopped
     volumes:
-    - /etc/localtime:/etc/localtime:ro
-    - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
     networks:
       - app-network
 
- # ---- Manual Control (Admin Panel)
+  # Manual Control (Admin Panel)
   manual-control:
     build:
       context: ./manual-control
@@ -183,6 +169,28 @@ services:
     restart: unless-stopped
     networks:
       - app-network
+    environment:
+      - VITE_API_URL=http://localhost:8081   # явный адрес Caddy
+
+  # ---- BACKEND (добавлен)
+  backend:
+    build: ./backend                # путь к папке с Dockerfile и pom.xml
+    container_name: internship-backend
+    ports:
+      - "8082:8082"                 # опционально – для прямого доступа с хоста
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/aggregator
+      - SPRING_DATASOURCE_USERNAME=app
+      - SPRING_DATASOURCE_PASSWORD=secret
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
 
 volumes:
   kafka_data:
