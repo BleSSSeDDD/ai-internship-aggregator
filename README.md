@@ -46,6 +46,11 @@ cd ai-internship-aggregator
 ```bash
 task up-with-model
 ```
+## Browser view
+
+admin panel for manually adding internship cards:
+
+<img width="1802" height="977" alt="image" src="https://github.com/user-attachments/assets/8e6e3d6c-2f11-41fd-b62a-5eb35c3e4498" />
 
 
 
