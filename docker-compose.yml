@@ -5,8 +5,6 @@ services:
   kafka:
     image: apache/kafka:4.2.0
     container_name: internship-kafka
-    ports:
-      - "9094:9094"
     environment:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: controller,broker
@@ -43,7 +41,6 @@ services:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: internship-kafka:9092
       KAFKA_CLUSTERS_0_PROPERTIES_SECURITY_PROTOCOL: PLAINTEXT
-      TZ: "Europe/Moscow"
     volumes:
       - ./proto:/etc/kafka-ui/proto:ro
     depends_on:
@@ -56,14 +53,11 @@ services:
   postgres:
     image: postgres:18.2-alpine
     container_name: internship-postgres
-    ports:
-      - "5433:5432"
     environment:
       POSTGRES_DB: aggregator
       POSTGRES_USER: app
       POSTGRES_PASSWORD: secret
       POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=C"
-      TZ: "Europe/Moscow"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -78,8 +72,6 @@ services:
   ollama:
     image: ollama/ollama:latest
     container_name: internship-ollama
-    ports:
-      - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
     environment:
@@ -87,7 +79,6 @@ services:
       - OLLAMA_NUM_PARALLEL=2
       - OLLAMA_MAX_LOADED_MODELS=1
       - OLLAMA_CONTEXT_LENGTH=16384
-      - TZ=Europe/Moscow
     healthcheck:
       test: ["CMD", "ollama", "list"]
       interval: 10s
@@ -102,8 +93,6 @@ services:
     image: caddy:2.9-alpine
     container_name: internship-caddy
     restart: unless-stopped
-    environment:
-      - TZ=Europe/Moscow
     ports:
       - "80:80"
       - "443:443"
@@ -121,8 +110,6 @@ services:
   parser:
     build: ./scrapper
     container_name: internship-parser
-    environment:
-      - TZ=Europe/Moscow
     depends_on:
       kafka:
         condition: service_healthy
@@ -142,11 +129,10 @@ services:
       dockerfile: Dockerfile
     container_name: internship-manual-control
     ports:
-      - "2228:2228"
+      - "2228:2228" #с локалхоста можно зайти в админ панель
     environment:
       - KAFKA_BROKERS=kafka:9092
       - PORT=2228
-      - TZ=Europe/Moscow
     depends_on:
       kafka:
         condition: service_healthy
@@ -170,14 +156,12 @@ services:
     networks:
       - app-network
     environment:
-      - VITE_API_URL=http://localhost:8081   # явный адрес Caddy
+      - VITE_API_URL=http://localhost:8081
 
-  # ---- BACKEND (добавлен)
+  # ---- BACKEND
   backend:
-    build: ./backend                # путь к папке с Dockerfile и pom.xml
-    container_name: internship-backend
-    ports:
-      - "8082:8082"                 # опционально – для прямого доступа с хоста
+    build: ./backend             
+    container_name: internship-backend        
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/aggregator
       - SPRING_DATASOURCE_USERNAME=app

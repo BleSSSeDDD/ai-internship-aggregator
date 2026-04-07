@@ -29,9 +29,23 @@ The Go service is built with **Separation of Concerns** in mind:
 
 ## 🚀 Quick Start
 
-### 1. Spin up the infrastructure
-We use a **Monorepo** approach. Everything you need is in the root folder.
-```bash
-task infra
+### Setup Guide
+
+1. Install Task
+Follow the official instructions:
+https://taskfile.dev/installation
+
+Clone repository
+
+bash
+git clone https://github.com/BleSSSeDDD/ai-internship-aggregator.git
+cd ai-internship-aggregator
+
+2. Run the Task command
+
+bash
+task up-with-model
+
+
 
 
