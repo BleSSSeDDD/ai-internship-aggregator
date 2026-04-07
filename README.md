@@ -37,15 +37,15 @@ https://taskfile.dev/installation
 
 Clone repository
 
-bash
+```bash
 git clone https://github.com/BleSSSeDDD/ai-internship-aggregator.git
 cd ai-internship-aggregator
-
+```
 2. Run the Task command
 
-bash
+```bash
 task up-with-model
-
+```
 
 
 
