@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/BleSSSeDDD/ai-internship-aggregator/gen/go/vacancy"
-	"github.com/BleSSSeDDD/ai-internship-aggregator/internal/domain"
+	"github.com/BleSSSeDDD/ai-internship-aggregator/scrapper/gen/go/vacancy"
+	"github.com/BleSSSeDDD/ai-internship-aggregator/scrapper/internal/domain"
 	"github.com/segmentio/kafka-go"
 	"google.golang.org/protobuf/proto"
 )

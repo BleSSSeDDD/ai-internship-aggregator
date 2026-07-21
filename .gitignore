@@ -25,7 +25,14 @@ go.work
 go.work.sum
 
 # env file
-#.env
+.env
+
+# Node
+node_modules/
+internhub/dist/
+
+# Windows / OneDrive
+desktop.ini
 
 # Editor/IDE
 # .idea/

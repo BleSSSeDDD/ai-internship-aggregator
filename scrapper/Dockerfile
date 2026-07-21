@@ -6,23 +6,17 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-ENV CGO_ENABLED=0
-RUN go build -o ai-parser ./cmd/worker/
+RUN CGO_ENABLED=0 go build -o scraper ./cmd/worker/
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o wait-for-model ./cmd/wait-for-model.go
+FROM alpine:3.21
 
-FROM alpine:latest AS parser
+RUN addgroup -S scraper && adduser -S scraper -G scraper
 
-RUN addgroup -S parser && adduser -S parser -G parser
+WORKDIR /app
 
-WORKDIR /parser
-
-COPY --from=build /build/ai-parser ./ai-parser
+COPY --from=build /build/scraper ./scraper
 COPY --from=build /build/config /config
-COPY --from=build /build/wait-for-model ./wait-for-model
 
-RUN chmod +x ./ai-parser ./wait-for-model
+USER scraper
 
-USER parser
-
-ENTRYPOINT [ "./wait-for-model"]
+ENTRYPOINT ["./scraper"]

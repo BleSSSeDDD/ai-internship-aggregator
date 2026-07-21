@@ -7,7 +7,7 @@ tasks:
       - task --list
 
   up-with-model:
-    desc: Start all services and pull model
+    desc: Start all services and pull the LLM model
     cmds:
       - task: up
       - echo "Waiting for Ollama to be ready..."
@@ -21,33 +21,42 @@ tasks:
       - task: kafka-create-topic
 
   up:
-    desc: Start all services
+    desc: Build and start all services
     cmds:
-      - echo "Starting services..."
-      - docker compose build --no-cache parser
-      - docker compose up -d
-      - echo "Done. Kafka UI http://localhost:8080"
-      - task ps
+      - docker compose up -d --build
+      - echo "Frontend      http://localhost:8081"
+      - echo "Admin panel   http://localhost:2228"
+      - echo "Kafka UI      http://localhost:8088"
+      - task: ps
 
   down:
     desc: Stop all services
     cmds:
-      - echo "Stopping services..."
       - docker compose down
-      - echo "All services stopped"
 
   destroy:
     desc: Stop and remove everything (including volumes)
     cmds:
       - echo "WARNING This will delete ALL data!"
       - docker compose down -v
-      - echo "Everything removed"
 
   restart:
     desc: Restart all services
     cmds:
-      - task down
-      - task up
+      - task: down
+      - task: up
+
+  test:
+    desc: Run Go tests for both services
+    cmds:
+      - cd scrapper && go test ./...
+      - cd manual-control && go test ./...
+
+  vet:
+    desc: Run go vet for both services
+    cmds:
+      - cd scrapper && go vet ./...
+      - cd manual-control && go vet ./...
 
   logs:
     desc: Show logs (Ctrl+C to exit)
@@ -65,9 +74,9 @@ tasks:
       - docker exec -it internship-kafka bash
 
   kafka-topics:
-  desc: List Kafka topics
-  cmds:
-    - docker exec internship-kafka /opt/kafka/bin/kafka-topics.sh --list --bootstrap-server localhost:9092
+    desc: List Kafka topics
+    cmds:
+      - docker exec internship-kafka /opt/kafka/bin/kafka-topics.sh --list --bootstrap-server localhost:9092
 
   kafka-create-topic:
     desc: Create a topic (use TOPIC=name)

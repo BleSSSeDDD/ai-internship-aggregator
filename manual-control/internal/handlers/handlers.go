@@ -2,13 +2,13 @@ package handlers
 
 import (
 	"encoding/json"
-	"log"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
 
-	"github.com/BleSSSeDDD/ai-internship-aggregator/gen/go/vacancy"
-	"github.com/BleSSSeDDD/ai-internship-aggregator/internal/kafka"
+	"github.com/BleSSSeDDD/ai-internship-aggregator/manual-control/gen/go/vacancy"
+	"github.com/BleSSSeDDD/ai-internship-aggregator/manual-control/internal/kafka"
 	"github.com/gin-gonic/gin"
 )
 
@@ -27,16 +27,6 @@ func (h *Handlers) Index(c *gin.Context) {
 }
 
 func (h *Handlers) Submit(c *gin.Context) {
-	techStackRaw := c.PostForm("tech_stack")
-	techStack := strings.Split(techStackRaw, ",")
-	var cleanTechStack []string
-	for _, t := range techStack {
-		trimmed := strings.TrimSpace(t)
-		if trimmed != "" {
-			cleanTechStack = append(cleanTechStack, trimmed)
-		}
-	}
-
 	minSalary, _ := strconv.Atoi(c.PostForm("min_salary"))
 
 	internship := &vacancy.CompanyInternship{
@@ -44,7 +34,7 @@ func (h *Handlers) Submit(c *gin.Context) {
 		SourceUrl:              c.PostForm("source_url"),
 		SourceSite:             c.PostForm("source_site"),
 		PositionName:           c.PostForm("position_name"),
-		TechStack:              cleanTechStack,
+		TechStack:              splitTechStack(c.PostForm("tech_stack")),
 		MinSalary:              int32(minSalary),
 		Location:               c.PostForm("location"),
 		InternshipDates:        c.PostForm("internship_dates"),
@@ -55,27 +45,17 @@ func (h *Handlers) Submit(c *gin.Context) {
 		ExperienceRequirements: c.PostForm("experience_requirements"),
 	}
 
-	if internship.CompanyName == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Название компании обязательно"})
-		return
-	}
-	if internship.PositionName == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Название позиции обязательно"})
-		return
-	}
-	if len(internship.TechStack) == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Технологии обязательны"})
+	if err := validate(internship); err != "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err})
 		return
 	}
 
 	partition, offset, err := h.kafkaProducer.SendInternship(internship)
 	if err != nil {
-		log.Printf("Ошибка отправки в Kafka: %v", err)
+		slog.Error("failed to send internship", "company", internship.CompanyName, "error", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
-	log.Printf("Стажировка отправлена: %s, партиция: %d, оффсет: %d", internship.CompanyName, partition, offset)
 
 	internshipJSON, _ := json.MarshalIndent(internship, "", "  ")
 
@@ -91,7 +71,30 @@ func (h *Handlers) Submit(c *gin.Context) {
 func (h *Handlers) Health(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "ok",
-		"service": "admin-panel",
-		"kafka":   "connected",
+		"service": "manual-control",
 	})
+}
+
+// validate возвращает текст ошибки для формы или "", если всё заполнено.
+func validate(in *vacancy.CompanyInternship) string {
+	switch {
+	case in.CompanyName == "":
+		return "Название компании обязательно"
+	case in.PositionName == "":
+		return "Название позиции обязательно"
+	case len(in.TechStack) == 0:
+		return "Технологии обязательны"
+	}
+	return ""
+}
+
+// splitTechStack разбирает строку "Go, Kafka, gRPC" в срез без пустых элементов.
+func splitTechStack(raw string) []string {
+	var result []string
+	for _, item := range strings.Split(raw, ",") {
+		if trimmed := strings.TrimSpace(item); trimmed != "" {
+			result = append(result, trimmed)
+		}
+	}
+	return result
 }

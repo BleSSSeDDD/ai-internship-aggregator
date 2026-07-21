@@ -3,116 +3,151 @@ package main
 import (
 	"bufio"
 	"context"
-	"log"
+	"log/slog"
 	"os"
+	"os/signal"
+	"strconv"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
-	"github.com/BleSSSeDDD/ai-internship-aggregator/internal/infrastructure/aiprocessor"
-	"github.com/BleSSSeDDD/ai-internship-aggregator/internal/infrastructure/httpclient"
-	"github.com/BleSSSeDDD/ai-internship-aggregator/internal/infrastructure/kafka"
-	"github.com/BleSSSeDDD/ai-internship-aggregator/internal/usecase"
+	"github.com/BleSSSeDDD/ai-internship-aggregator/scrapper/internal/infrastructure/aiprocessor"
+	"github.com/BleSSSeDDD/ai-internship-aggregator/scrapper/internal/infrastructure/httpclient"
+	"github.com/BleSSSeDDD/ai-internship-aggregator/scrapper/internal/infrastructure/kafka"
+	"github.com/BleSSSeDDD/ai-internship-aggregator/scrapper/internal/usecase"
 )
 
-const (
-	SITES_FILE     = "/config/sites.txt"
-	MAX_CONCURRENT = 3
-)
+type config struct {
+	ollamaURL      string
+	ollamaModel    string
+	aiTimeout      time.Duration
+	kafkaBrokers   []string
+	kafkaTopic     string
+	sitesFile      string
+	concurrency    int
+	scrapeInterval time.Duration
+}
+
+func loadConfig() config {
+	return config{
+		ollamaURL:      envOr("OLLAMA_URL", "http://ollama:11434"),
+		ollamaModel:    envOr("OLLAMA_MODEL", "qwen2.5:3b"),
+		aiTimeout:      envDurationOr("AI_TIMEOUT", 10*time.Minute),
+		kafkaBrokers:   strings.Split(envOr("KAFKA_BROKERS", "kafka:9092"), ","),
+		kafkaTopic:     envOr("KAFKA_TOPIC", "internships"),
+		sitesFile:      envOr("SITES_FILE", "/config/sites.txt"),
+		concurrency:    envIntOr("SCRAPE_CONCURRENCY", 3),
+		scrapeInterval: envDurationOr("SCRAPE_INTERVAL", 6*time.Hour),
+	}
+}
 
 func main() {
-	p := httpclient.NewParser()
-	a := aiprocessor.NewAiProcessor("http://internship-ollama:11434", "qwen2.5:3b")
-	k := kafka.NewPublisher(
-		[]string{"internship-kafka:9092"},
-		"internships",
-	)
-	defer k.Close()
+	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stdout, nil)))
 
-	scrapper := usecase.NewScraperUsecase(p, a, k)
+	cfg := loadConfig()
 
-	urls, err := readSitesFromFile(SITES_FILE)
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	urls, err := readSitesFile(cfg.sitesFile)
 	if err != nil {
-		log.Fatalf("Ошибка чтения файла с сайтами: %v", err)
+		slog.Error("failed to read sites file", "file", cfg.sitesFile, "error", err)
+		os.Exit(1)
 	}
-
 	if len(urls) == 0 {
-		log.Fatal("Нет URL для парсинга в файле sites.txt")
+		slog.Error("sites file contains no URLs", "file", cfg.sitesFile)
+		os.Exit(1)
 	}
 
-	log.Printf("Найдено %d URL для парсинга", len(urls))
-	log.Printf("Запускаю парсинг с максимальной параллельностью %d", MAX_CONCURRENT)
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	urlChan := make(chan string, len(urls))
-	for _, url := range urls {
-		urlChan <- url
-	}
-	close(urlChan)
-
-	results := make(chan struct {
-		url string
-		err error
-	}, len(urls))
-
-	var wg sync.WaitGroup
-	for i := 0; i < MAX_CONCURRENT; i++ {
-		wg.Add(1)
-		go workerParser(ctx, &wg, scrapper, urlChan, results)
+	// Модель тянется отдельно (task ollama-pull), при холодном старте ждём её.
+	if err := aiprocessor.WaitForModel(ctx, cfg.ollamaURL, cfg.ollamaModel); err != nil {
+		slog.Error("ollama model is not available", "model", cfg.ollamaModel, "error", err)
+		os.Exit(1)
 	}
 
-	go func() {
-		wg.Wait()
-		close(results)
-	}()
+	publisher := kafka.NewPublisher(cfg.kafkaBrokers, cfg.kafkaTopic)
+	defer publisher.Close()
 
-	successCount := 0
-	failCount := 0
+	scraper := usecase.NewScraperUsecase(
+		httpclient.NewParser(),
+		aiprocessor.NewAiProcessor(cfg.ollamaURL, cfg.ollamaModel, cfg.aiTimeout),
+		publisher,
+	)
 
-	for result := range results {
-		if result.err != nil {
-			log.Printf("Ошибка при парсинге %s: %v", result.url, result.err)
-			failCount++
-		} else {
-			log.Printf("Успешно обработан: %s", result.url)
-			successCount++
-		}
-	}
+	slog.Info("scraper started",
+		"urls", len(urls),
+		"concurrency", cfg.concurrency,
+		"interval", cfg.scrapeInterval,
+	)
 
-	log.Printf("Парсинг завершен. Успешно: %d, Ошибок: %d", successCount, failCount)
-}
+	runCycle(ctx, scraper, urls, cfg.concurrency)
 
-func workerParser(ctx context.Context, wg *sync.WaitGroup, scrapper *usecase.ScraperUsecase, urls <-chan string, results chan<- struct {
-	url string
-	err error
-}) {
-	defer wg.Done()
+	ticker := time.NewTicker(cfg.scrapeInterval)
+	defer ticker.Stop()
 
-	for url := range urls {
+	for {
 		select {
 		case <-ctx.Done():
-			results <- struct {
-				url string
-				err error
-			}{url: url, err: ctx.Err()}
+			slog.Info("shutting down")
 			return
-		default:
-			time.Sleep(2 * time.Second)
-
-			log.Printf("Начинаю парсинг: %s", url)
-			err := scrapper.Run(ctx, url)
-
-			results <- struct {
-				url string
-				err error
-			}{url: url, err: err}
+		case <-ticker.C:
+			runCycle(ctx, scraper, urls, cfg.concurrency)
 		}
 	}
 }
 
-func readSitesFromFile(filename string) ([]string, error) {
+// runCycle обходит все URL пулом воркеров и ждёт завершения обхода.
+func runCycle(ctx context.Context, scraper *usecase.ScraperUsecase, urls []string, concurrency int) {
+	start := time.Now()
+
+	jobs := make(chan string)
+	var wg sync.WaitGroup
+	var mu sync.Mutex
+	succeeded, failed := 0, 0
+
+	for range concurrency {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for url := range jobs {
+				err := scraper.Run(ctx, url)
+
+				mu.Lock()
+				if err != nil {
+					failed++
+				} else {
+					succeeded++
+				}
+				mu.Unlock()
+
+				if err != nil && ctx.Err() == nil {
+					slog.Error("failed to scrape", "url", url, "error", err)
+				}
+			}
+		}()
+	}
+
+feed:
+	for _, url := range urls {
+		select {
+		case jobs <- url:
+		case <-ctx.Done():
+			break feed
+		}
+	}
+	close(jobs)
+	wg.Wait()
+
+	slog.Info("scrape cycle finished",
+		"succeeded", succeeded,
+		"failed", failed,
+		"took", time.Since(start).Round(time.Second),
+	)
+}
+
+// readSitesFile читает URL построчно, пропуская пустые строки и #-комментарии.
+func readSitesFile(filename string) ([]string, error) {
 	file, err := os.Open(filename)
 	if err != nil {
 		return nil, err
@@ -121,17 +156,48 @@ func readSitesFromFile(filename string) ([]string, error) {
 
 	var urls []string
 	scanner := bufio.NewScanner(file)
-
 	for scanner.Scan() {
-		url := strings.TrimSpace(scanner.Text())
-		if url != "" && !strings.HasPrefix(url, "#") {
-			urls = append(urls, url)
+		line := strings.TrimSpace(scanner.Text())
+		if line != "" && !strings.HasPrefix(line, "#") {
+			urls = append(urls, line)
 		}
 	}
-
 	if err := scanner.Err(); err != nil {
 		return nil, err
 	}
 
 	return urls, nil
+}
+
+func envOr(key, fallback string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return fallback
+}
+
+func envIntOr(key string, fallback int) int {
+	v := os.Getenv(key)
+	if v == "" {
+		return fallback
+	}
+	n, err := strconv.Atoi(v)
+	if err != nil || n <= 0 {
+		slog.Warn("invalid value, using default", "key", key, "value", v, "default", fallback)
+		return fallback
+	}
+	return n
+}
+
+func envDurationOr(key string, fallback time.Duration) time.Duration {
+	v := os.Getenv(key)
+	if v == "" {
+		return fallback
+	}
+	d, err := time.ParseDuration(v)
+	if err != nil || d <= 0 {
+		slog.Warn("invalid value, using default", "key", key, "value", v, "default", fallback)
+		return fallback
+	}
+	return d
 }

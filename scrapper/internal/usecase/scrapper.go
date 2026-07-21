@@ -2,11 +2,13 @@ package usecase
 
 import (
 	"context"
-	"log"
+	"fmt"
+	"log/slog"
 
-	"github.com/BleSSSeDDD/ai-internship-aggregator/internal/domain"
+	"github.com/BleSSSeDDD/ai-internship-aggregator/scrapper/internal/domain"
 )
 
+// ScraperUsecase — конвейер: скачать страницу → извлечь стажировки через LLM → отправить в Kafka.
 type ScraperUsecase struct {
 	parser    domain.Parser
 	ai        domain.AIProcessor
@@ -14,21 +16,28 @@ type ScraperUsecase struct {
 }
 
 func NewScraperUsecase(p domain.Parser, ai domain.AIProcessor, pub domain.Publisher) *ScraperUsecase {
-	return &ScraperUsecase{p, ai, pub}
+	return &ScraperUsecase{parser: p, ai: ai, publisher: pub}
 }
 
 func (u *ScraperUsecase) Run(ctx context.Context, link string) error {
 	text, err := u.parser.GetRawContent(ctx, link)
 	if err != nil {
-		return err
+		return fmt.Errorf("fetch page: %w", err)
 	}
 
 	data, err := u.ai.Process(ctx, text, link)
 	if err != nil {
-		return err
+		return fmt.Errorf("extract internships: %w", err)
 	}
 
-	log.Printf("Найдено %d стажировок на странице %s", len(data), link)
+	if len(data) == 0 {
+		slog.Info("no internships found", "url", link)
+		return nil
+	}
 
-	return u.publisher.Publish(ctx, data)
+	if err := u.publisher.Publish(ctx, data); err != nil {
+		return fmt.Errorf("publish internships: %w", err)
+	}
+
+	return nil
 }

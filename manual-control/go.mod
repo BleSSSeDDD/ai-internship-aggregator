@@ -1,4 +1,4 @@
-module github.com/BleSSSeDDD/ai-internship-aggregator
+module github.com/BleSSSeDDD/ai-internship-aggregator/manual-control
 
 go 1.25.3
 

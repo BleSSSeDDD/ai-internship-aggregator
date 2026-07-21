@@ -6,28 +6,19 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
+RUN CGO_ENABLED=0 go build -o manual-control ./cmd/server/
 
-ENV CGO_ENABLED=0
-RUN go build -o manual-control ./cmd/server/
+FROM alpine:3.21
 
-FROM alpine:latest AS manual-control
-
-RUN apk add --no-cache ca-certificates tzdata && \
-    cp /usr/share/zoneinfo/Europe/Moscow /etc/localtime && \
-    echo "Europe/Moscow" > /etc/timezone
+RUN apk add --no-cache ca-certificates tzdata
 
 RUN addgroup -S manual && adduser -S manual -G manual
 
 WORKDIR /app
 
 COPY --from=build /build/manual-control ./manual-control
-
 COPY --from=build /build/static ./static
 COPY --from=build /build/templates ./templates
-
-RUN chmod +x ./manual-control
-
-RUN chown -R manual:manual /app
 
 USER manual
 
